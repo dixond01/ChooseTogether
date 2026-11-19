@@ -1,0 +1,33 @@
+# Files and Conversion
+
+## Upload
+- The browser uploads the original **directly to Cloudflare R2** through a signed upload URL, so large files never pass through the app's server. Large files may need multipart upload.
+- The submission is saved with `processing_status = pending`.
+
+## Conversion worker (AWS Lambda)
+- An **AWS Lambda** function running **ffmpeg** (from a layer or container image) converts one file per invocation.
+  - When an upload completes, the Edge Function **invokes it asynchronously** with the job ID.
+  - The Lambda claims the job in Postgres, downloads the original from R2, converts it, uploads the result, records the real duration, and sets `processing_status` to `ready` or `failed`.
+- Conversion happens **continuously** as submissions arrive, and Lambda runs many jobs in parallel.
+- Lambda's limit is 15 minutes per run. Use high memory (more CPU) and a faster preset for 4K/60fps sources. A timeout marks the job `failed`.
+- A scheduled sweep (pg_cron) re-invokes jobs that are stuck `running` past a lease timeout, or `queued` but never started.
+- Keep the conversion code runnable locally for testing.
+- Conversion targets, so files play in every browser:
+  - **Video** → H.264 MP4, max 1080p (smaller sources keep their resolution), `-crf 20 -preset medium`, fast start (`-movflags +faststart`)
+  - **Audio** → MP3/AAC
+  - **HEIC images** → JPEG/WebP
+  - **Text** → no conversion
+- Reviewers see "Processing…" until the file is ready.
+- Supabase Edge Functions can't run ffmpeg, which is why the conversion runs on Lambda.
+
+## Reprocess
+- Any reviewer can click **"Problem with this file? Reprocess."** This:
+  - creates a job (who requested it and when) and sets the status back to `pending`
+  - has the worker convert again from the original, with "safe mode" (more compatible) settings
+  - replaces the old converted file
+- Allow only **one open job per submission** (a database constraint). Extra clicks do nothing.
+- If the original has been deleted, the button is disabled with the note *"Original file was deleted; contact the organizer at {email}."*
+
+## Retention
+- The original-file retention setting is in `projects-and-settings.md`. The default is keep until results are sent.
+- The worker deletes originals only when the setting allows it and the conversion is `ready`.

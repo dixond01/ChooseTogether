@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 450" width="1000" height="450" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="450" rx="18" fill="#ffffff"/>
+  <text x="500" y="36" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">How ChooseTogether works</text>
+
+  <!-- Row 1: left to right -->
+  <g>
+    <rect x="30" y="60" width="190" height="90" rx="14" fill="#F9A8D4"/>
+    <text x="125" y="98" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Submit</text>
+    <text x="125" y="120" text-anchor="middle" font-size="13" fill="#1f2937">Performer fills out</text>
+    <text x="125" y="137" text-anchor="middle" font-size="13" fill="#1f2937">the public form</text>
+  </g>
+  <g>
+    <rect x="270" y="60" width="190" height="90" rx="14" fill="#FDBA74"/>
+    <text x="365" y="98" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Convert</text>
+    <text x="365" y="120" text-anchor="middle" font-size="13" fill="#1f2937">File becomes playable</text>
+    <text x="365" y="137" text-anchor="middle" font-size="13" fill="#1f2937">in every browser</text>
+  </g>
+  <g>
+    <rect x="510" y="60" width="190" height="90" rx="14" fill="#FDE047"/>
+    <text x="605" y="98" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Assign</text>
+    <text x="605" y="120" text-anchor="middle" font-size="13" fill="#1f2937">Each act goes to</text>
+    <text x="605" y="137" text-anchor="middle" font-size="13" fill="#1f2937">2+ reviewers</text>
+  </g>
+  <g>
+    <rect x="750" y="60" width="190" height="90" rx="14" fill="#86EFAC"/>
+    <text x="845" y="98" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Review</text>
+    <text x="845" y="120" text-anchor="middle" font-size="13" fill="#1f2937">Reviewers vote,</text>
+    <text x="845" y="137" text-anchor="middle" font-size="13" fill="#1f2937">score &amp; tag</text>
+  </g>
+
+  <!-- Row 1 arrows -->
+  <line x1="222" y1="105" x2="266" y2="105" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="462" y1="105" x2="506" y2="105" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="702" y1="105" x2="746" y2="105" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Down to decision -->
+  <line x1="845" y1="152" x2="845" y2="206" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Row 2: right to left -->
+  <g>
+    <polygon points="845,210 935,265 845,320 755,265" fill="#5EEAD4"/>
+    <text x="845" y="261" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">Reviewers</text>
+    <text x="845" y="281" text-anchor="middle" font-size="16" font-weight="700" fill="#111827">agree?</text>
+  </g>
+  <g>
+    <rect x="510" y="220" width="190" height="90" rx="14" fill="#93C5FD"/>
+    <text x="605" y="258" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Final decision</text>
+    <text x="605" y="280" text-anchor="middle" font-size="13" fill="#1f2937">Selected · Waitlisted</text>
+    <text x="605" y="297" text-anchor="middle" font-size="13" fill="#1f2937">· Not Selected</text>
+  </g>
+  <g>
+    <rect x="270" y="220" width="190" height="90" rx="14" fill="#C4B5FD"/>
+    <text x="365" y="258" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Results emailed</text>
+    <text x="365" y="280" text-anchor="middle" font-size="13" fill="#1f2937">Sent when the owner</text>
+    <text x="365" y="297" text-anchor="middle" font-size="13" fill="#1f2937">clicks Send results</text>
+  </g>
+  <g>
+    <rect x="510" y="345" width="190" height="80" rx="14" fill="#FDA4AF"/>
+    <text x="605" y="378" text-anchor="middle" font-size="18" font-weight="700" fill="#111827">Owner decides</text>
+    <text x="605" y="401" text-anchor="middle" font-size="13" fill="#1f2937">Settles disagreements</text>
+  </g>
+
+  <!-- Yes: straight -->
+  <line x1="753" y1="265" x2="706" y2="265" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="729" y="255" text-anchor="middle" font-size="14" font-weight="700" fill="#047857">Yes</text>
+
+  <!-- No: one curve -->
+  <path d="M845,322 Q845,385 706,385" fill="none" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="860" y="360" font-size="14" font-weight="700" fill="#B91C1C">No</text>
+
+  <!-- Owner up to final decision -->
+  <line x1="605" y1="343" x2="605" y2="316" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Final decision to email -->
+  <line x1="508" y1="265" x2="466" y2="265" stroke="#374151" stroke-width="3" marker-end="url(#arrow)"/>
+</svg>
