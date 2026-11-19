@@ -285,7 +285,7 @@ flowchart LR
         T["Team member<br/>(owner, co-manager, reviewer, viewer)"]
     end
 
-    FE["React + TS app<br/>(static host: Vercel / CF Pages)"]
+    FE["React + TS app<br/>(GitHub Pages)"]
 
     subgraph Supabase
         AUTH["Auth<br/>(magic links)"]
@@ -354,7 +354,7 @@ Milestones: **form ready by Thu 12/3**, form opens about Sat 12/5, final submiss
 | Date | Goal |
 |---|---|
 | Thu 11/19 | Initial design, data modeling + system design interviews, project log entry |
-| Fri 11/20 | Set up the Supabase project, Vite React + TS app, R2 bucket and repo structure |
+| Fri 11/20 | Set up the Supabase project, Vite React + TS app, R2 bucket, repo structure, GitHub Pages deploy workflow |
 | Sat 11/21 | Write the database schema for People & Projects and Intake, with basic RLS |
 | Mon 11/23 | (Class work day) Owner magic-link sign-in, create project + settings screen |
 | Tue 11/24 | Invite Edge Function: add members by email and role, send the magic link |
@@ -362,7 +362,7 @@ Milestones: **form ready by Thu 12/3**, form opens about Sat 12/5, final submiss
 | Thu 11/26 – Fri 11/27 | Thanksgiving (light or off) |
 | Sat 11/28 | Submit Edge Function: one-transaction insert, signed R2 upload, Turnstile |
 | Mon 11/30 | (Class) AWS Lambda ffmpeg converter and job claiming |
-| Tue 12/1 | pg_cron sweep for stuck jobs, end-to-end test (upload → ready), deploy frontend |
+| Tue 12/1 | pg_cron sweep for stuck jobs, end-to-end test (upload → ready) on the live GitHub Pages site |
 | Wed 12/2 | (Class) Test with real phone videos from several browsers, fix bugs |
 | Thu 12/3 | **Intake freeze:** form ready to go live |
 | Fri 12/4 | Review schema + auto-assignment with conflict check |

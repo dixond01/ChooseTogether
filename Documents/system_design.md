@@ -9,7 +9,7 @@ flowchart LR
         T["Team member<br/>(owner, co-manager, reviewer, viewer)"]
     end
 
-    FE["React + TS app<br/>(static host: Vercel / CF Pages)"]
+    FE["React + TS app<br/>(GitHub Pages)"]
 
     subgraph Supabase
         AUTH["Auth<br/>(magic links)"]
@@ -82,6 +82,14 @@ sequenceDiagram
 3. For playback, an Edge Function returns a **short-lived signed URL** for the converted file. Videos are never public.
 4. Votes and tags are written directly to Postgres under RLS. A trigger recomputes the submission status under the decision rule and writes the decision log.
 
+## Frontend hosting (GitHub Pages)
+- The React app is built by Vite and deployed by a **GitHub Actions workflow** on every push to `main`. The site is served at `https://<username>.github.io/ChooseTogether/`.
+- **Routing:** Pages is static and can't serve deep links like `/project/123/review` on refresh, so the app uses a **hash router** (`/#/project/123/review`).
+- **Base path:** `vite.config.ts` sets `base: '/ChooseTogether/'`. Change it to `/` if a custom domain is added.
+- **Auth redirects:** the Pages URL (and `localhost` for development) must be in Supabase Auth's allowed redirect URLs, so magic links return to the app.
+- **Config:** only the Supabase URL and anon key are built into the site. They're public by design, and RLS protects the data. All other keys stay in Edge Functions and Lambda.
+- Videos stream from R2, not Pages, so Pages bandwidth limits aren't a concern.
+
 ## Security boundaries
 | Zone | Who | Can do |
 |---|---|---|
@@ -114,7 +122,7 @@ sequenceDiagram
 | Service | Expected cost |
 |---|---|
 | Supabase (DB, Auth, Edge Functions) | Free tier |
-| Frontend hosting | Free tier |
+| Frontend hosting (GitHub Pages) | Free (public repo; ~1 GB site, ~100 GB/month soft bandwidth) |
 | Cloudflare R2 | ~10 GB free. 150+ GB with originals is about $2–3/month during the show, less after retention cleanup |
 | Resend | Free tier (daily limit; ~300–900 emails could take more than one day) |
 | Turnstile | Free |
@@ -122,4 +130,4 @@ sequenceDiagram
 | AI API (stretch) | Cents per suggestion run |
 
 ## New technologies (flagged per AGENTS.md)
-Supabase (Auth, RLS, Edge Functions on Deno, pg_cron), Cloudflare R2 + signed URLs, ffmpeg, AWS Lambda with an ffmpeg layer or container image, Resend, Cloudflare Turnstile, Vite, and a static host.
+Supabase (Auth, RLS, Edge Functions on Deno, pg_cron), Cloudflare R2 + signed URLs, ffmpeg, AWS Lambda with an ffmpeg layer or container image, Resend, Cloudflare Turnstile, Vite, GitHub Pages + a GitHub Actions deploy workflow.
