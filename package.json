@@ -1,0 +1,23 @@
+{
+  "name": "choosetogether",
+  "version": "1.0.0",
+  "description": "A repository for my CS 452 final project at BYU.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dixond01/ChooseTogether.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dixond01/ChooseTogether/issues"
+  },
+  "homepage": "https://github.com/dixond01/ChooseTogether#readme",
+  "devDependencies": {
+    "supabase": "^3.2.0"
+  }
+}

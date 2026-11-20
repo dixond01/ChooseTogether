@@ -1,2 +1,4 @@
 Context/
 .env
+cloudflareAPIsecret.txt
+node_modules/
