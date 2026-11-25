@@ -151,14 +151,14 @@ isOneToOne: false
                   ]
                 },"project_requests": {
                   Row: {
-                    "created_at": string,"decided_at": string | null,"decision_note": string | null,"email": string,"id": string,"note": string,"project_id": string | null,"project_name": string,"slug": string,"status": Database["public"]['Enums']["request_status"],"submissions_close_at": string,"user_id": string
+                    "created_at": string,"decided_at": string | null,"decision_note": string | null,"dismissed_at": string | null,"email": string,"id": string,"note": string,"project_id": string | null,"project_name": string,"slug": string,"status": Database["public"]['Enums']["request_status"],"submissions_close_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"decided_at"?: string | null,"decision_note"?: string | null,"email": string,"id"?: string,"note": string,"project_id"?: string | null,"project_name": string,"slug": string,"status"?: Database["public"]['Enums']["request_status"],"submissions_close_at": string,"user_id": string
+                    "created_at"?: string,"decided_at"?: string | null,"decision_note"?: string | null,"dismissed_at"?: string | null,"email": string,"id"?: string,"note": string,"project_id"?: string | null,"project_name": string,"slug": string,"status"?: Database["public"]['Enums']["request_status"],"submissions_close_at": string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"decided_at"?: string | null,"decision_note"?: string | null,"email"?: string,"id"?: string,"note"?: string,"project_id"?: string | null,"project_name"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["request_status"],"submissions_close_at"?: string,"user_id"?: string
+                    "created_at"?: string,"decided_at"?: string | null,"decision_note"?: string | null,"dismissed_at"?: string | null,"email"?: string,"id"?: string,"note"?: string,"project_id"?: string | null,"project_name"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["request_status"],"submissions_close_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -278,6 +278,7 @@ isOneToOne: false
               "created_at": string,
 "decided_at": string | null,
 "decision_note": string | null,
+"dismissed_at": string | null,
 "email": string,
 "id": string,
 "note": string,
@@ -294,6 +295,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"dismiss_project_request":
+{ Args: { "p_request_id": string }; Returns: undefined
+                           },
 "get_public_form":
 { Args: { "p_slug": string }; Returns: {
               "agreement_text": string,"is_open": boolean,"max_duration_seconds": number,"max_participants": number,"name": string,"organizer_email": string,"project_id": string,"submissions_close_at": string
