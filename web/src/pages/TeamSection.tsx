@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { callFunction } from '../lib/functions'
 import type { Enums, Tables } from '../lib/database.types'
 
 type Member = Tables<'project_members'>
@@ -38,19 +38,11 @@ type InviteBody = {
 
 // Calls the invite-member Edge Function. On a 4xx/5xx it still returns the
 // member row when the person was added but the email failed.
-async function callInvite(body: InviteBody): Promise<{ member?: Member; error?: string }> {
-  const { data, error } = await supabase.functions.invoke('invite-member', {
-    body: { ...body, redirectTo: window.location.origin + import.meta.env.BASE_URL },
+function callInvite(body: InviteBody) {
+  return callFunction<{ member?: Member }>('invite-member', {
+    ...body,
+    redirectTo: window.location.origin + import.meta.env.BASE_URL,
   })
-  if (!error) return data
-  if (error instanceof FunctionsHttpError) {
-    try {
-      return await error.context.json()
-    } catch {
-      /* fall through */
-    }
-  }
-  return { error: error.message }
 }
 
 type Props = { projectId: string; canEdit: boolean }

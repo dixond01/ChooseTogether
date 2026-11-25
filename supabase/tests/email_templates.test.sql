@@ -12,7 +12,8 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('33333333-3333-3333-3333-333333333333', 'reviewer@test.com',  now()),
   ('55555555-5555-5555-5555-555555555555', 'stranger@test.com',  now());
 
--- Owner creates the project through the app's only path.
+-- Owner (a site admin, so they can create directly) creates the project.
+insert into public.site_admins (user_id) values ('11111111-1111-1111-1111-111111111111');
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","email":"owner@test.com"}';
 do $$ begin perform public.create_project('Test Show', 'test-show', now() + interval '7 days'); end $$;
@@ -120,7 +121,8 @@ select is((select count(*) from public.email_templates), 0::bigint,
 reset role;
 set local role service_role;
 delete from public.projects where id = current_setting('test.project_id')::uuid;
-select is((select count(*) from public.email_templates), 0::bigint,
+select is((select count(*) from public.email_templates
+            where project_id = current_setting('test.project_id')::uuid), 0::bigint,
   'templates are deleted with their project');
 
 select * from finish();

@@ -1,7 +1,13 @@
 # Roles and Auth
 
 ## Accounts and access
-- Any signed-in user can create as many projects as they want. Owners sign in with a passwordless **magic link** (Supabase Auth).
+- Anyone can sign in with a passwordless **magic link** (Supabase Auth).
+- **New projects need a site admin's approval** (the site is public and storage is limited).
+  - A signed-in user sends a **project request**: project name, form link, close date and what it's for. They can have one waiting request at a time.
+  - The site admin is emailed the request, with the requester's email (replying goes to the requester). They approve or deny it on the **Project Requests** page in the app, not from the email, because email link scanners could click an approve link.
+  - Approving creates the project with the requester as **owner** (the admin isn't added to it). If the form link was taken in the meantime, a number is added (e.g. `-2`). Denying keeps the request, with an optional message.
+  - The requester is emailed the decision and sees it on their Projects page.
+  - Site admins (`site_admins`, added by hand in the SQL editor) can also create projects directly. Requests and requesters' emails are visible only to site admins and to the requester (RLS).
 - Team members join by **email invite**. A manager adds their email and role, and an Edge Function creates the `project_members` row and emails them a **Supabase magic link**. Everyone uses the same sign-in system; there are no custom invite tokens.
   - Members never create a password or fill out an account form. Clicking the link signs them in.
   - If their session expires, they enter their email to get a new link.

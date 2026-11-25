@@ -8,33 +8,11 @@
 // Permissions come from project_members, not from the link: this only creates
 // the row and sends a normal sign-in link. claim_memberships() links the row
 // to the account the first time they sign in.
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { adminClient, EMAIL_RE, getCaller, json, readJson } from '../_shared/http.ts'
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
-// Service role: skips RLS. Only ever used here on the server.
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-// Same check as participant_emails in the schema.
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
-// The owner is set by create_project(); nobody is invited as owner.
+// The owner is set when the project is created; nobody is invited as owner.
 const INVITABLE_ROLES = ['co_manager', 'member'] as const
 type InvitableRole = (typeof INVITABLE_ROLES)[number]
-
-// The app is a static site on another origin (GitHub Pages / localhost), so the
-// browser sends a CORS preflight. Access is decided by the bearer token, not the origin.
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-function json(status: number, body: unknown) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
-  })
-}
 
 type Body = {
   projectId?: unknown
@@ -46,27 +24,15 @@ type Body = {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
-  if (req.method !== 'POST') return json(405, { error: 'Use POST' })
-
   // --- Who is calling? ---------------------------------------------------
-  const authHeader = req.headers.get('Authorization') ?? ''
-  const token = authHeader.replace(/^Bearer\s+/i, '')
-  if (!token) return json(401, { error: 'You must be signed in.' })
-
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
-  const { data: userData, error: userError } = await admin.auth.getUser(token)
-  if (userError || !userData.user) return json(401, { error: 'Your session has expired. Sign in again.' })
+  const caller = await getCaller(req)
+  if (caller instanceof Response) return caller
+  const { asCaller } = caller
+  const admin = adminClient()
 
   // --- Validate input ----------------------------------------------------
-  let body: Body
-  try {
-    body = await req.json()
-  } catch {
-    return json(400, { error: 'Request body must be JSON.' })
-  }
+  const body = await readJson<Body>(req)
+  if (!body) return json(400, { error: 'Request body must be JSON.' })
   const projectId = typeof body.projectId === 'string' ? body.projectId : ''
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   const role = body.role as InvitableRole
@@ -83,10 +49,6 @@ Deno.serve(async (req) => {
   // --- Is the caller a manager of this project? ----------------------------
   // Asked as the caller (their token, RLS on), so the same is_manager() rule
   // the database policies use decides it. Revoked managers get false.
-  const asCaller = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
   const { data: isManager, error: roleError } = await asCaller.rpc('is_manager', { p_project_id: projectId })
   if (roleError) return json(500, { error: roleError.message })
   if (!isManager) return json(403, { error: 'Only the owner and co-managers can invite people.' })

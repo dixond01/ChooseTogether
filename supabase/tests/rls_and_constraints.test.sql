@@ -35,6 +35,12 @@ insert into auth.users (id, email, email_confirmed_at) values
 insert into auth.users (id, email, email_confirmed_at) values
   ('88888888-8888-8888-8888-888888888888', 'pending@test.com', null);
 
+-- Only site admins create projects directly (everyone else sends a request;
+-- see project_requests.test.sql), so both project owners here are admins.
+insert into public.site_admins (user_id) values
+  ('11111111-1111-1111-1111-111111111111'),
+  ('77777777-7777-7777-7777-777777777777');
+
 -- ============================================================
 -- Creating projects
 -- ============================================================
@@ -44,7 +50,7 @@ set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","e
 select is(
   (select slug from public.create_project('Test Show', 'test-show', now() + interval '7 days')),
   'test-show',
-  'signed-in user can create a project and gets it back in one call');
+  'site admin can create a project and gets it back in one call');
 
 select is(
   (select role::text from public.project_members where email = 'owner@test.com'),
