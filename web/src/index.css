@@ -293,3 +293,4 @@ details[open] > summary { margin-bottom: 14px; }
 .notice { margin: 0 0 24px; }
 a.textbtn { text-decoration: none; }
 a.textbtn:hover { text-decoration: underline; }
+.request-remove { margin-left: auto; }

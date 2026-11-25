@@ -5,7 +5,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(29);
 
 insert into auth.users (id, email, email_confirmed_at) values
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'admin@test.com',     now()),
@@ -192,6 +192,45 @@ select lives_ok(
   $$ insert into public.project_requests (user_id, email, project_name, slug, submissions_close_at, note)
      values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'requester@test.com', 'Second', 'second', now(), 'next year') $$,
   'a new request is allowed once the last one is decided');
+
+-- ============================================================
+-- Removing a denied request from your list
+-- ============================================================
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb","email":"requester@test.com"}';
+
+select throws_ok(
+  $$ select public.dismiss_project_request('11111111-0000-0000-0000-000000000002') $$,
+  '42501', null,
+  'a user cannot remove someone else''s denied request');
+
+select throws_ok(
+  $$ select public.dismiss_project_request('11111111-0000-0000-0000-000000000001') $$,
+  '42501', null,
+  'an approved request cannot be removed');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"cccccccc-cccc-cccc-cccc-cccccccccccc","email":"other@test.com"}';
+
+select lives_ok(
+  $$ select public.dismiss_project_request('11111111-0000-0000-0000-000000000002') $$,
+  'a requester can remove their own denied request');
+
+select throws_ok(
+  $$ select public.dismiss_project_request('11111111-0000-0000-0000-000000000002') $$,
+  '42501', null,
+  'removing it twice is an error');
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","email":"admin@test.com"}';
+
+select isnt(
+  (select dismissed_at from public.project_requests where id = '11111111-0000-0000-0000-000000000002'),
+  null,
+  'the admin still sees a removed request, marked as removed');
 
 select * from finish();
 rollback;

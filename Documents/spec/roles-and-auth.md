@@ -6,7 +6,7 @@
   - A signed-in user sends a **project request**: project name, form link, close date and what it's for. They can have one waiting request at a time.
   - The site admin is emailed the request, with the requester's email (replying goes to the requester). They approve or deny it on the **Project Requests** page in the app, not from the email, because email link scanners could click an approve link.
   - Approving creates the project with the requester as **owner** (the admin isn't added to it). If the form link was taken in the meantime, a number is added (e.g. `-2`). Denying keeps the request, with an optional message.
-  - The requester is emailed the decision and sees it on their Projects page.
+  - The requester is emailed the decision and sees it on their Projects page. They can **Remove** a denied request from that page; it's only hidden from them (`dismissed_at`), and admins keep the record.
   - Site admins (`site_admins`, added by hand in the SQL editor) can also create projects directly. Requests and requesters' emails are visible only to site admins and to the requester (RLS).
 - Team members join by **email invite**. A manager adds their email and role, and an Edge Function creates the `project_members` row and emails them a **Supabase magic link**. Everyone uses the same sign-in system; there are no custom invite tokens.
   - Members never create a password or fill out an account form. Clicking the link signs them in.

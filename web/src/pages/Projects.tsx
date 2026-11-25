@@ -29,6 +29,7 @@ export default function Projects() {
           .from('project_requests')
           .select('id, project_name, status, decision_note, decided_at')
           .eq('user_id', user?.id ?? '')
+          .is('dismissed_at', null)
           .or(`status.eq.pending,and(status.eq.denied,decided_at.gte.${since})`)
           .order('created_at', { ascending: false }),
       ])
@@ -46,6 +47,16 @@ export default function Projects() {
     }
     load()
   }, [])
+
+  // Hides a denied request from this list (the admin keeps the record).
+  async function dismiss(id: string) {
+    const { error } = await supabase.rpc('dismiss_project_request', { p_request_id: id })
+    if (error) {
+      setError(error.message)
+      return
+    }
+    setRequests((list) => list.filter((r) => r.id !== id))
+  }
 
   // One waiting request at a time.
   const hasPending = requests.some((r) => r.status === 'pending')
@@ -77,6 +88,9 @@ export default function Projects() {
               <div>
                 <span className="pname muted">{r.project_name}</span>
                 <span className="pill">{r.status === 'pending' ? 'Waiting for Approval' : 'Not Approved'}</span>
+                {r.status === 'denied' && (
+                  <button className="textbtn request-remove" onClick={() => dismiss(r.id)}>Remove</button>
+                )}
               </div>
               {r.decision_note && <p className="muted request-note">{r.decision_note}</p>}
             </li>
