@@ -276,3 +276,20 @@ details[open] > summary { margin-bottom: 14px; }
 }
 .textbtn:disabled { color: var(--plum-line); cursor: default; text-decoration: none; }
 .textbtn.danger { color: var(--error); }
+
+/* Project requests */
+.request-row { padding: 22px 0; display: flex; flex-direction: column; gap: 6px; }
+.request-row > div { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.request-note { margin: 0; white-space: pre-wrap; max-width: 680px; }
+.requests { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.request { display: flex; flex-direction: column; gap: 18px; padding: 32px 0; border-bottom: 1px solid var(--line); }
+.request-name { font: 400 28px/1.15 var(--display); }
+.request-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 24px; margin: 0; font-size: 15px; }
+.request-facts dt { color: var(--ink-soft); }
+.request-facts dd { margin: 0; }
+.request > .request-note { border-left: 2px solid var(--plum-line); padding-left: 14px; }
+.request .deny { gap: 20px; }
+.decided { margin-top: 48px; max-width: 900px; }
+.notice { margin: 0 0 24px; }
+a.textbtn { text-decoration: none; }
+a.textbtn:hover { text-decoration: underline; }

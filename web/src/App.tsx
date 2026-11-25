@@ -6,6 +6,7 @@ import SignIn from './pages/SignIn'
 import Projects from './pages/Projects'
 import NewProject from './pages/NewProject'
 import ProjectSettings from './pages/ProjectSettings'
+import AdminRequests from './pages/AdminRequests'
 
 import { LOGO_URL } from './lib/format'
 
@@ -22,6 +23,7 @@ export default function App() {
             path="/projects/:projectId/settings/:section?"
             element={<RequireAuth><ProjectSettings /></RequireAuth>}
           />
+          <Route path="/admin/requests" element={<RequireAuth><AdminRequests /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>
