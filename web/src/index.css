@@ -214,3 +214,14 @@ details[open] > summary { margin-bottom: 14px; }
   .signin-brand h1 { font-size: 32px; }
   .signin-form { padding: 32px 16px; }
 }
+
+/* ---------- delete project (owner) ---------- */
+.danger-zone { margin-top: 64px; max-width: 680px; }
+.danger-zone .fields { gap: 20px; }
+.danger-zone .warn { border-left-color: var(--error); }
+.danger-zone > summary { color: var(--error); }
+.danger-zone .input { border-color: var(--error); }
+.danger-zone .input:focus-within { box-shadow: 0 0 0 1px var(--error), 0 0 0 5px #f8e9e8; }
+.btn.danger { background: var(--error); }
+.btn.danger:disabled { background: #e3c3c0; }
+.row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
