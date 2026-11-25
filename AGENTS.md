@@ -3,6 +3,7 @@
 ## Agent Instructions
 - Before using any new technology (language, framework, library, service or tool) that isn't already in the project, tell the user what it is and why you're using it.
 - Read only the spec file for the area you're changing (see the spec map). Styling, refactors and tooling usually need none.
+- **Supabase CLI (v3) targets the local Docker database by default.** Add `--remote` to any command meant for the live project (e.g. `npx supabase db push --remote`, `migration list --remote`, `gen types typescript --remote`). `--linked` is deprecated. Run tests locally with `npx supabase test db` (no flag).
 
 ## Project
 ChooseTogether helps a team collect a large number of file submissions (video, audio, image, text) through a public form, review them together, and decide which are Selected, Waitlisted or Not Selected. The first real use is a volunteer talent show with about 200–300 videos; **the form must be live by about 12/03/2026** (it opens around 12/05). This is a CS 452 final project (requirements: `Documents/class_requirements.md`).
