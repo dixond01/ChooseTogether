@@ -6,3 +6,4 @@
 |11/20|3:00|Database schema: People & Projects and Intake tables, RLS policies, local Supabase, pgTAP tests|
 |11/24|0:30|Fixed delete cascade, all 59 tests passing, pushed schema to live Supabase, generated TS types|
 |11/24|3:00|Owner magic-link sign-in, project list/create and settings screens; new visual design (fonts, plum palette, logo)|
+|11/25|2:00|Team invites (invite Edge Function, Team settings), Resend email, custom domain choosetogether.app, admin approval for new projects|
