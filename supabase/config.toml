@@ -229,7 +229,10 @@ enabled = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+# ChooseTogether: must be true. Invites match on the login email, so an unconfirmed
+# (e.g. password) sign-up must never get a token. Keep "Confirm email" on in the
+# hosted project too.
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # If enabled, users will need to provide their current password to change their password, unless

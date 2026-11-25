@@ -15,6 +15,7 @@ flowchart LR
     end
     subgraph Intake["2. Intake"]
         submissions --> participants
+        participants --> participant_emails
         submissions --> media_files
         media_files --> processing_jobs
     end
@@ -84,7 +85,7 @@ erDiagram
     TAGS {
         uuid id PK
         uuid project_id FK
-        text name "UK with project_id"
+        citext name "UK with project_id, case-insensitive"
     }
 ```
 
@@ -94,6 +95,7 @@ erDiagram
 erDiagram
     PROJECTS ||--o{ SUBMISSIONS : receives
     SUBMISSIONS ||--|{ PARTICIPANTS : includes
+    PARTICIPANTS ||--o| PARTICIPANT_EMAILS : "may have"
     SUBMISSIONS ||--|| MEDIA_FILES : has
     MEDIA_FILES ||--o{ PROCESSING_JOBS : "converted by"
     PROJECT_MEMBERS ||--o{ PROCESSING_JOBS : "requests reprocess"
@@ -120,7 +122,10 @@ erDiagram
         uuid submission_id FK
         int position "UK with submission_id"
         text name
-        citext email "optional, managers only"
+    }
+    PARTICIPANT_EMAILS {
+        uuid participant_id PK, FK
+        citext email "managers only (RLS)"
     }
     MEDIA_FILES {
         uuid id PK
@@ -139,7 +144,7 @@ erDiagram
         uuid media_file_id FK
         uuid requested_by FK "null = initial upload"
         job_mode mode "standard | safe"
-        job_status status "queued | running | done | failed"
+        job_status status "awaiting_upload | queued | running | done | failed"
         timestamptz lease_until "running jobs past this are requeued"
         int attempts
         text error
@@ -266,16 +271,19 @@ erDiagram
 ## Key constraints and design notes
 - **The owner is also a `project_members` row** (role `owner`, with `user_id`). Every permission check uses the same table.
 - **Roles vs. reviewing:** `role` sets permissions (`owner`, `co_manager`, `member`). `in_review_rotation` decides who gets auto-assigned. The UI labels a `member` as **Reviewer** (on) or **Viewer** (off). Managers can turn it on for themselves (default off), and members default to on. This avoids contradictory states like a "viewer" who has assignments.
-- **One open processing job per file:** a partial unique index on `processing_jobs(media_file_id) WHERE status IN ('queued','running')`.
+- **One owner per project:** a partial unique index on `project_members(project_id) WHERE role = 'owner'`.
+- **One open processing job per file:** a partial unique index on `processing_jobs(media_file_id) WHERE status IN ('awaiting_upload','queued','running')`.
+- **Job lifecycle:** `awaiting_upload` (created at submit) → `queued` (upload complete) → `running` (claimed by Lambda) → `done` or `failed`. The sweep only touches `queued` and `running`, so it never sends Lambda after a file that hasn't finished uploading.
 - **No duplicate reviewers:** `UNIQUE(submission_id, member_id)` on `assignments`.
 - **One vote per assignment:** `UNIQUE(assignment_id)` on `votes`. Votes hang off assignments, so a demoted reviewer's completed votes survive.
 - **Votes are editable** (updates `updated_at`) until a manager sets the submission's final status. After that they're read-only. There's no vote history table.
-- **Conflict check:** assignment skips a member whose `email` matches any `participants.email` on that submission.
+- **Conflict check:** assignment skips a member whose `email` matches any `participant_emails.email` on that submission.
 - **At least one participant email:** enforced by the submit Edge Function (in one transaction) and in the browser.
+- **Finality of participants:** triggers block updates to `participants` and `participant_emails`, and RLS blocks all browser writes. Adding new participant rows to an existing submission is prevented only by the submit function being the sole writer (the database doesn't block a later insert by server code).
 - **Combined tags:** `SELECT DISTINCT tag_id FROM submission_tags WHERE submission_id = ? AND discarded_at IS NULL`.
 - **Decision log is append-only.** Every change to `submissions.status` inserts a row, ideally from a trigger.
 - **Follow-up flag:** `status <> last_emailed_status` after results are sent.
-- **Privacy:** RLS blocks `participants.email` for reviewers and viewers, e.g. through a view without emails or column-level grants.
+- **Privacy:** participant emails live in their own 1-to-1 table, `participant_emails`, whose RLS policy allows only managers to read it. Reviewers and viewers can read `participants` (names) but get no rows from `participant_emails`. A participant without an email has no row there.
 - **Removing a member** is soft: set `revoked_at`, so their invite link stops working, and their unfinished assignments are reassigned. The manager chooses whether to **keep or discard** their completed votes and tags.
   - Discarding sets `discarded_at` instead of deleting, so history stays intact.
   - Discarded votes and tags don't count toward decisions or combined tags.

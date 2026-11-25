@@ -1,5 +1,7 @@
 # ChooseTogether: Initial Design
 
+> This is the original design from 11/19. For the current schema, see [erd.md](erd.md) and the migrations in `supabase/migrations/`.
+
 ## Purpose and Goals
 
 I am creating ChooseTogether to help my Stake Activities Committee retrieve and review hundreds of submissions for a talent show in January. Though it solves a specific problem, I am making it as extensible as I can by adding support for other file types, creation of new projects, and project-by-project settings to meet the needs of potential users. Important features include creating projects, inviting reviewers, the submission form, deciding whether to include a submission based on the reviewers' votes, and sending emails to those who submitted. 
