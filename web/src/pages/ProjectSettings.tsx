@@ -7,6 +7,7 @@ import {
 } from '../lib/format'
 import { isTemplateDirty, type Drafts, type Template } from '../lib/emailTemplates'
 import EmailTemplates from './EmailTemplates'
+import TeamSection from './TeamSection'
 
 type Project = Tables<'projects'>
 type Tag = Pick<Tables<'tags'>, 'id' | 'name'>
@@ -28,10 +29,11 @@ type Form = {
   targetMinutes: string
 }
 
-type SectionId = 'basics' | 'form' | 'review' | 'tags' | 'emails' | 'files' | 'show'
+type SectionId = 'basics' | 'team' | 'form' | 'review' | 'tags' | 'emails' | 'files' | 'show'
 
 const SECTIONS: { id: SectionId; label: string; save?: string; keys: (keyof Form)[] }[] = [
   { id: 'basics', label: 'Basics', save: 'Save Basics', keys: ['name', 'slug', 'closesAt'] },
+  { id: 'team', label: 'Team', keys: [] }, // each invite/removal saves on its own
   {
     id: 'form', label: 'Submission Form', save: 'Save Form Settings',
     keys: ['limitParticipants', 'maxParticipants', 'maxMinutes', 'agreement'],
@@ -203,7 +205,9 @@ export default function ProjectSettings() {
 
       <main className="page">
         <h1 className="page-title">{current.label}</h1>
-        {current.id === 'tags' ? (
+        {current.id === 'team' ? (
+          <TeamSection projectId={projectId} canEdit={canEdit} />
+        ) : current.id === 'tags' ? (
           <TagsSection projectId={projectId} tags={tags} setTags={setTags} canEdit={canEdit} />
         ) : current.id === 'emails' ? (
           <EmailTemplates
