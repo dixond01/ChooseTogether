@@ -9,12 +9,42 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState>({ session: null, loading: true })
 
+// Sign-in emails (owner sign-in and team invites) link to
+// /ChooseTogether/?token_hash=...&type=email; see supabase/templates/magic_link.html.
+// Verified once at module load: the token works only once, and React StrictMode
+// runs effects twice in development.
+const tokenVerification: Promise<void> | null = (() => {
+  const url = new URL(window.location.href)
+  const tokenHash = url.searchParams.get('token_hash')
+  if (!tokenHash) return null
+  return supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'email' }).then(async ({ error }) => {
+    url.searchParams.delete('token_hash')
+    url.searchParams.delete('type')
+    // Already signed in (e.g. clicked an old link again): just carry on.
+    if (error && !(await supabase.auth.getSession()).data.session) {
+      // SignIn shows ?error_description.
+      url.searchParams.set('error_description', 'That sign-in link has expired or was already used. Request a new one.')
+    }
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+  })
+})()
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ session: null, loading: true })
   const claimedFor = useRef<string | null>(null)
 
   useEffect(() => {
+    let verifying = tokenVerification !== null
+    // Expired or already-used link: show the sign-in page (with the error).
+    tokenVerification?.then(async () => {
+      verifying = false
+      const { data } = await supabase.auth.getSession()
+      setState({ session: data.session, loading: false })
+    })
+
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Stay "loading" while the emailed link is checked, so the sign-in page doesn't flash.
+      if (verifying && !session) return
       setState({ session, loading: false })
 
       const userId = session?.user.id ?? null
