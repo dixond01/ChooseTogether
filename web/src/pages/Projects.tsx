@@ -26,7 +26,7 @@ export default function Projects() {
     <main className="page">
       <div className="list-head">
         <h1 className="page-title">Projects</h1>
-        <Link className="btn" to="/projects/new">New project</Link>
+        <Link className="btn" to="/projects/new">New Project</Link>
       </div>
       {error && <p className="error">{error}</p>}
       {projects === null && !error && <p className="muted">Loading…</p>}

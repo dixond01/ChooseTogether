@@ -33,11 +33,11 @@ export default function NewProject() {
   return (
     <main className="page">
       <Link to="/" className="back">← Projects</Link>
-      <h1 className="page-title">New project</h1>
+      <h1 className="page-title">New Project</h1>
       <form onSubmit={onSubmit}>
         <div className="fields">
           <div className="field">
-            <label className="label" htmlFor="name">Project name</label>
+            <label className="label" htmlFor="name">Project Name</label>
             <div className="input">
               <input
                 id="name"
@@ -52,7 +52,7 @@ export default function NewProject() {
             </div>
           </div>
           <div className="field">
-            <label className="label" htmlFor="slug">Form link</label>
+            <label className="label" htmlFor="slug">Form Link</label>
             <div className="input" style={{ maxWidth: 340 }}>
               <span className="unit prefix">/f/</span>
               <input
@@ -69,7 +69,7 @@ export default function NewProject() {
             </div>
           </div>
           <div className="field">
-            <label className="label" htmlFor="closes">Submissions close</label>
+            <label className="label" htmlFor="closes">Submissions Close</label>
             <div className="input date">
               <input
                 id="closes"
@@ -83,7 +83,7 @@ export default function NewProject() {
         </div>
         <div className="actions">
           <button className="btn" type="submit" disabled={saving}>
-            {saving ? 'Creating…' : 'Create project'}
+            {saving ? 'Creating…' : 'Create Project'}
           </button>
           {error && <p className="error">{error}</p>}
         </div>
