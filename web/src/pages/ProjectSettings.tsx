@@ -5,6 +5,8 @@ import type { Enums, Tables, TablesUpdate } from '../lib/database.types'
 import {
   formatDeadline, formatShortDate, publicFormUrl, SLUG_PATTERN, toLocalInput,
 } from '../lib/format'
+import { isTemplateDirty, type Drafts, type Template } from '../lib/emailTemplates'
+import EmailTemplates from './EmailTemplates'
 
 type Project = Tables<'projects'>
 type Tag = Pick<Tables<'tags'>, 'id' | 'name'>
@@ -26,29 +28,30 @@ type Form = {
   targetMinutes: string
 }
 
-type SectionId = 'basics' | 'form' | 'review' | 'tags' | 'files' | 'show'
+type SectionId = 'basics' | 'form' | 'review' | 'tags' | 'emails' | 'files' | 'show'
 
 const SECTIONS: { id: SectionId; label: string; save?: string; keys: (keyof Form)[] }[] = [
-  { id: 'basics', label: 'Basics', save: 'Save basics', keys: ['name', 'slug', 'closesAt'] },
+  { id: 'basics', label: 'Basics', save: 'Save Basics', keys: ['name', 'slug', 'closesAt'] },
   {
-    id: 'form', label: 'Submission form', save: 'Save form settings',
+    id: 'form', label: 'Submission Form', save: 'Save Form Settings',
     keys: ['limitParticipants', 'maxParticipants', 'maxMinutes', 'agreement'],
   },
-  { id: 'review', label: 'Review', save: 'Save review rules', keys: ['reviewers', 'decisionRule', 'scoreRequired'] },
+  { id: 'review', label: 'Review', save: 'Save Review Rules', keys: ['reviewers', 'decisionRule', 'scoreRequired'] },
   { id: 'tags', label: 'Tags', keys: [] }, // tags save as you add/remove them
-  { id: 'files', label: 'Files', save: 'Save file settings', keys: ['retention', 'graceDays'] },
-  { id: 'show', label: 'Show', save: 'Save show settings', keys: ['targetMinutes'] },
+  { id: 'emails', label: 'Emails', keys: [] }, // templates save one status at a time
+  { id: 'files', label: 'Files', save: 'Save File Settings', keys: ['retention', 'graceDays'] },
+  { id: 'show', label: 'Show', save: 'Save Show Settings', keys: ['targetMinutes'] },
 ]
 
 // Codes are stored; labels live only in the UI.
 const DECISION_RULES: [Enums<'decision_rule'>, string][] = [
-  ['any_disagreement_to_owner', 'Owner decides'],
-  ['majority', 'Majority wins'],
+  ['any_disagreement_to_owner', 'Owner Decides'],
+  ['majority', 'Majority Wins'],
 ]
 const RETENTION: [Enums<'retention_policy'>, string][] = [
-  ['until_results_sent', 'Keep until results are sent'],
-  ['after_conversion', 'Delete after conversion'],
-  ['forever', 'Keep forever'],
+  ['until_results_sent', 'Keep Until Results Are Sent'],
+  ['after_conversion', 'Delete After Conversion'],
+  ['forever', 'Keep Forever'],
 ]
 const MAX_REVIEWERS = 10
 
@@ -113,6 +116,9 @@ export default function ProjectSettings() {
   const [form, setForm] = useState<Form | null>(null)
   const [role, setRole] = useState<Enums<'member_role'> | null>(null)
   const [tags, setTags] = useState<Tag[]>([])
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [drafts, setDrafts] = useState<Drafts>({})
+  const [organizerEmail, setOrganizerEmail] = useState('')
   const [loadError, setLoadError] = useState<string | null>(null)
   // UI only; RLS is what actually enforces these.
   const canEdit = role === 'owner' || role === 'co_manager'
@@ -120,10 +126,12 @@ export default function ProjectSettings() {
 
   useEffect(() => {
     async function load() {
-      const [p, myRole, t] = await Promise.all([
+      const [p, myRole, t, et, owner] = await Promise.all([
         supabase.from('projects').select('*').eq('id', projectId).maybeSingle(),
         supabase.rpc('my_role', { p_project_id: projectId }),
         supabase.from('tags').select('id, name').eq('project_id', projectId).order('name'),
+        supabase.from('email_templates').select('id, status, subject, body').eq('project_id', projectId),
+        supabase.from('project_members').select('email').eq('project_id', projectId).eq('role', 'owner').maybeSingle(),
       ])
       if (p.error || !p.data) {
         setLoadError(p.error?.message ?? 'Project not found, or you no longer have access.')
@@ -134,6 +142,9 @@ export default function ProjectSettings() {
       setForm(toForm(p.data))
       setRole(myRole.data ?? null)
       setTags(t.data ?? [])
+      setTemplates(et.data ?? [])
+      setDrafts(Object.fromEntries((et.data ?? []).map((x) => [x.status, { subject: x.subject, body: x.body }])))
+      setOrganizerEmail(owner.data?.email ?? '')
     }
     load()
   }, [projectId])
@@ -153,7 +164,9 @@ export default function ProjectSettings() {
   if (!project || !form || !saved) return <p className="loading">Loading…</p>
 
   const isDirty = (id: SectionId) =>
-    SECTIONS.find((s) => s.id === id)!.keys.some((k) => form[k] !== saved[k])
+    id === 'emails'
+      ? templates.some((t) => isTemplateDirty(t, drafts))
+      : SECTIONS.find((s) => s.id === id)!.keys.some((k) => form[k] !== saved[k])
   const closed = new Date(project.submissions_close_at) < new Date()
 
   function onSaved(p: Project, keys: (keyof Form)[]) {
@@ -192,6 +205,16 @@ export default function ProjectSettings() {
         <h1 className="page-title">{current.label}</h1>
         {current.id === 'tags' ? (
           <TagsSection projectId={projectId} tags={tags} setTags={setTags} canEdit={canEdit} />
+        ) : current.id === 'emails' ? (
+          <EmailTemplates
+            templates={templates}
+            setTemplates={setTemplates}
+            drafts={drafts}
+            setDrafts={setDrafts}
+            canEdit={canEdit}
+            projectName={project.name}
+            organizerEmail={organizerEmail}
+          />
         ) : (
           <SectionForm
             key={current.id}
@@ -272,14 +295,14 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
           {section.id === 'basics' && (
             <>
               <div className="field">
-                <label className="label" htmlFor="name">Project name</label>
+                <label className="label" htmlFor="name">Project Name</label>
                 <div className="input">
                   <input id="name" required value={form.name} onChange={(e) => set('name', e.target.value)} />
                 </div>
               </div>
 
               <div className="field">
-                <span className="label">Submissions close</span>
+                <span className="label">Submissions Close</span>
                 {editingDeadline ? (
                   <div className="input date">
                     <input
@@ -303,16 +326,16 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
               </div>
 
               <div className="field">
-                <span className="label">Public form</span>
+                <span className="label">Public Form</span>
                 <div className="value">
                   <code>{publicFormUrl(saved.slug)}</code>
                   <button type="button" className="textbtn" onClick={copyLink}>
-                    {copied ? 'Copied' : 'Copy link'}
+                    {copied ? 'Copied' : 'Copy Link'}
                   </button>
                 </div>
                 {canEdit && (
                   <details open={form.slug !== saved.slug || undefined}>
-                    <summary>Change link</summary>
+                    <summary>Change Link</summary>
                     <div className="field">
                       <div className="input" style={{ maxWidth: 340 }}>
                         <span className="unit prefix">/f/</span>
@@ -337,14 +360,14 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
             <>
               <div className="pair">
                 <div className="field">
-                  <span className="label">Participants per submission</span>
+                  <span className="label">Participants per Submission</span>
                   <label className="switch">
                     <input
                       type="checkbox"
                       checked={form.limitParticipants}
                       onChange={(e) => set('limitParticipants', e.target.checked)}
                     />
-                    Set a limit
+                    Set a Limit
                   </label>
                   {form.limitParticipants && (
                     <div className="input narrow" style={{ width: 170 }}>
@@ -361,7 +384,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                   )}
                 </div>
                 <div className="field">
-                  <label className="label" htmlFor="len">Max video / audio length</label>
+                  <label className="label" htmlFor="len">Max Video / Audio Length</label>
                   <div className="input narrow">
                     <input
                       id="len"
@@ -377,7 +400,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                 </div>
               </div>
               <div className="field">
-                <label className="label" htmlFor="agree">Agreement checkbox text</label>
+                <label className="label" htmlFor="agree">Agreement Checkbox Text</label>
                 <div className="input wide">
                   <textarea
                     id="agree"
@@ -393,7 +416,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
           {section.id === 'review' && (
             <>
               <div className="field">
-                <span className="label">Reviewers per submission</span>
+                <span className="label">Reviewers per Submission</span>
                 <div className="stepper">
                   <button
                     type="button"
@@ -411,7 +434,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                 </div>
               </div>
               <div className="field">
-                <span className="label">When reviewers disagree</span>
+                <span className="label">When Reviewers Disagree</span>
                 <div className="choices" role="radiogroup">
                   {DECISION_RULES.map(([code, label]) => (
                     <label key={code} className="choice">
@@ -434,7 +457,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                     checked={form.scoreRequired}
                     onChange={(e) => set('scoreRequired', e.target.checked)}
                   />
-                  Score each vote 1–5
+                  Score Each Vote 1–5
                 </label>
               </div>
             </>
@@ -443,7 +466,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
           {section.id === 'files' && (
             <>
               <div className="field">
-                <span className="label">Original uploads</span>
+                <span className="label">Original Uploads</span>
                 <div className="choices" role="radiogroup">
                   {RETENTION.map(([code, label]) => (
                     <label key={code} className="choice">
@@ -460,7 +483,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
               </div>
               {form.retention === 'after_conversion' && (
                 <div className="field">
-                  <label className="label" htmlFor="grace">Wait before deleting</label>
+                  <label className="label" htmlFor="grace">Wait Before Deleting</label>
                   <div className="input narrow">
                     <input
                       id="grace"
@@ -480,7 +503,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
 
           {section.id === 'show' && (
             <div className="field">
-              <label className="label" htmlFor="target">Target show length</label>
+              <label className="label" htmlFor="target">Target Show Length</label>
               <div className="input narrow">
                 <input
                   id="target"
@@ -572,7 +595,7 @@ function TagsSection({ projectId, tags, setTags, canEdit }: TagsProps) {
         <form className="addtag" onSubmit={addTag}>
           <div className="input">
             <input
-              placeholder="New tag"
+              placeholder="New Tag"
               aria-label="New tag"
               value={newTag}
               onChange={(e) => {
@@ -616,13 +639,13 @@ function DeleteProject({ projectId, projectName }: { projectId: string; projectN
 
   return (
     <details className="danger-zone">
-      <summary>Delete project</summary>
+      <summary>Delete Project</summary>
       <form className="fields" onSubmit={onDelete}>
         <p className="warn">
           This permanently deletes the project, its team, tags and all submissions. It can't be undone.
         </p>
         <div className="field">
-          <label className="label" htmlFor="confirm-delete">Type the project name to confirm</label>
+          <label className="label" htmlFor="confirm-delete">Type the Project Name to Confirm</label>
           <div className="input">
             <input
               id="confirm-delete"
@@ -635,7 +658,7 @@ function DeleteProject({ projectId, projectName }: { projectId: string; projectN
         </div>
         <div className="row">
           <button className="btn danger" type="submit" disabled={!matches || deleting}>
-            {deleting ? 'Deleting…' : 'Delete project'}
+            {deleting ? 'Deleting…' : 'Delete Project'}
           </button>
           {error && <p className="error">{error}</p>}
         </div>

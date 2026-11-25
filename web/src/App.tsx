@@ -47,7 +47,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
           ChooseTogether
         </Link>
         <span className="who">{session.user.email}</span>
-        <button className="textbtn" onClick={() => supabase.auth.signOut()}>Sign out</button>
+        <button className="textbtn" onClick={() => supabase.auth.signOut()}>Sign Out</button>
       </header>
       {children}
     </>

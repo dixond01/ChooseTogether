@@ -41,17 +41,17 @@ export default function SignIn() {
       <div className="signin-form">
         {status === 'sent' ? (
           <div className="sent">
-            <h2>Check your email</h2>
+            <h2>Check Your Email</h2>
             <p>
               Sign-in link sent to <strong>{email}</strong>. Open it in this browser.
             </p>
             <div>
-              <button className="textbtn" onClick={() => setStatus('idle')}>Use a different email</button>
+              <button className="textbtn" onClick={() => setStatus('idle')}>Use a Different Email</button>
             </div>
           </div>
         ) : (
           <form onSubmit={onSubmit}>
-            <h2>Sign in</h2>
+            <h2>Sign In</h2>
             <div className="field">
               <label className="label" htmlFor="email">Email</label>
               <div className="input">
@@ -69,7 +69,7 @@ export default function SignIn() {
             {error && <p className="error">{error}</p>}
             <div>
               <button className="btn" type="submit" disabled={status === 'sending'}>
-                {status === 'sending' ? 'Sending…' : 'Email me a sign-in link'}
+                {status === 'sending' ? 'Sending…' : 'Email Me a Sign-In Link'}
               </button>
             </div>
           </form>
