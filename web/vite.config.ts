@@ -3,7 +3,8 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/ChooseTogether/',
+  // Served from the root of the custom domain https://choosetogether.app/.
+  base: '/',
   plugins: [react()],
   server: {
     port: 5180,
