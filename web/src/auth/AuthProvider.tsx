@@ -10,7 +10,7 @@ type AuthState = {
 const AuthContext = createContext<AuthState>({ session: null, loading: true })
 
 // Sign-in emails (owner sign-in and team invites) link to
-// /ChooseTogether/?token_hash=...&type=email; see supabase/templates/magic_link.html.
+// the site root as ?token_hash=...&type=email; see supabase/templates/magic_link.html.
 // Verified once at module load: the token works only once, and React StrictMode
 // runs effects twice in development.
 const tokenVerification: Promise<void> | null = (() => {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }, 0)
       }
 
-      // The magic link lands on /ChooseTogether/?code=...; drop it once handled.
+      // Older magic links land on /?code=...; drop it once handled.
       if (session && window.location.search.includes('code=')) {
         window.history.replaceState(null, '', window.location.pathname + window.location.hash)
       }

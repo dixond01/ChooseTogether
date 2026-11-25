@@ -20,7 +20,7 @@ React + TypeScript (Vite) on GitHub Pages · Supabase (Postgres, Auth magic link
 - **History is append-only:** status changes go in the decision log, and votes are never overwritten by reshuffling.
 - **API keys (AI, email, R2, AWS, Supabase service role) stay server-side** in Edge Functions or Lambda. The frontend is a public static site and may only contain the Supabase URL and anon key.
 - **AI only suggests.** It never changes data itself.
-- **GitHub Pages hosting:** use a **hash router** (`/#/...`) because Pages can't serve deep links. Vite `base` must match the Pages path (`/ChooseTogether/`) unless a custom domain is used. Supabase Auth redirect URLs must include the Pages URL.
+- **GitHub Pages hosting:** use a **hash router** (`/#/...`) because Pages can't serve deep links. The site is served at the custom domain **https://choosetogether.app/** (www redirects to it), so Vite `base` is `/`. Supabase Auth Site URL and redirect URLs must include `https://choosetogether.app/`.
 
 ## UI design
 - **Helper text is a last resort.** Don't add small explanatory text (subtitles, hints, "what this does" lines) under headings or fields. Let signifiers do the explaining: clear labels, placeholders, units, input types, icons, grouping and sensible defaults. Use helper text only when a mistake would be costly or hard to undo (e.g. "Changing this breaks links you've already shared").

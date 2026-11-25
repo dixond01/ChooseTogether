@@ -34,5 +34,5 @@ export function publicFormUrl(slug: string) {
 
 export const SLUG_PATTERN = '[a-z0-9]+(-[a-z0-9]+)*'
 
-// Served from web/public; BASE_URL is /ChooseTogether/ on GitHub Pages.
+// Served from web/public; BASE_URL is / (the site root).
 export const LOGO_URL = `${import.meta.env.BASE_URL}logo.svg`

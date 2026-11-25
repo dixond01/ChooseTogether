@@ -83,10 +83,10 @@ sequenceDiagram
 4. Votes and tags are written directly to Postgres under RLS. A trigger recomputes the submission status under the decision rule and writes the decision log.
 
 ## Frontend hosting (GitHub Pages)
-- The React app is built by Vite and deployed by a **GitHub Actions workflow** on every push to `main`. The site is served at `https://<username>.github.io/ChooseTogether/`.
+- The React app is built by Vite and deployed by a **GitHub Actions workflow** on every push to `main`. The site is served at the custom domain `https://choosetogether.app/` (`www.choosetogether.app` and the old `github.io/ChooseTogether/` address redirect to it).
 - **Routing:** Pages is static and can't serve deep links like `/project/123/review` on refresh, so the app uses a **hash router** (`/#/project/123/review`).
-- **Base path:** `vite.config.ts` sets `base: '/ChooseTogether/'`. Change it to `/` if a custom domain is added.
-- **Auth redirects:** the Pages URL (and `localhost` for development) must be in Supabase Auth's allowed redirect URLs, so magic links return to the app.
+- **Base path:** `vite.config.ts` sets `base: '/'` because the custom domain serves the app from the root.
+- **Auth redirects:** `https://choosetogether.app/` (and `localhost` for development) must be in Supabase Auth's allowed redirect URLs, so magic links return to the app.
 - **Config:** only the Supabase URL and anon key are built into the site. They're public by design, and RLS protects the data. All other keys stay in Edge Functions and Lambda.
 - Videos stream from R2, not Pages, so Pages bandwidth limits aren't a concern.
 
