@@ -102,10 +102,16 @@ details[open] > summary { margin-bottom: 14px; }
 /* choice cards (radio) */
 .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 212px)); gap: 12px; }
 .choice {
-  position: relative; display: flex; padding: 16px 18px; cursor: pointer;
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer;
   background: var(--white); border: 1px solid var(--plum); border-radius: var(--radius);
 }
-.choice input { position: absolute; opacity: 0; }
+.choice input[type="radio"] {
+  appearance: none; margin: 0; flex: none; cursor: pointer;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--white); border: 1px solid var(--plum);
+}
+.choice input[type="radio"]:checked { box-shadow: inset 0 0 0 4px var(--white); background: var(--plum); }
+.choice input[type="radio"]:focus-visible { outline: none; }
 .choice:has(input:checked) { background: var(--plum-tint); color: var(--plum); box-shadow: inset 0 0 0 1px var(--plum); }
 .choice:has(input:focus-visible) { outline: 2px solid var(--plum); outline-offset: 2px; }
 .choice:has(input:disabled) { cursor: default; }
