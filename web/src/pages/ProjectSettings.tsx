@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
-import { Link, Navigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { supabase } from '../lib/supabase'
 import type { Enums, Tables, TablesUpdate } from '../lib/database.types'
 import {
@@ -111,15 +111,18 @@ export default function ProjectSettings() {
   const [project, setProject] = useState<Project | null>(null)
   const [saved, setSaved] = useState<Form | null>(null)
   const [form, setForm] = useState<Form | null>(null)
-  const [canEdit, setCanEdit] = useState(false)
+  const [role, setRole] = useState<Enums<'member_role'> | null>(null)
   const [tags, setTags] = useState<Tag[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
+  // UI only; RLS is what actually enforces these.
+  const canEdit = role === 'owner' || role === 'co_manager'
+  const isOwner = role === 'owner'
 
   useEffect(() => {
     async function load() {
-      const [p, manager, t] = await Promise.all([
+      const [p, myRole, t] = await Promise.all([
         supabase.from('projects').select('*').eq('id', projectId).maybeSingle(),
-        supabase.rpc('is_manager', { p_project_id: projectId }),
+        supabase.rpc('my_role', { p_project_id: projectId }),
         supabase.from('tags').select('id, name').eq('project_id', projectId).order('name'),
       ])
       if (p.error || !p.data) {
@@ -129,7 +132,7 @@ export default function ProjectSettings() {
       setProject(p.data)
       setSaved(toForm(p.data))
       setForm(toForm(p.data))
-      setCanEdit(manager.data === true)
+      setRole(myRole.data ?? null)
       setTags(t.data ?? [])
     }
     load()
@@ -201,6 +204,9 @@ export default function ProjectSettings() {
             canEdit={canEdit}
             onSaved={onSaved}
           />
+        )}
+        {current.id === 'basics' && isOwner && (
+          <DeleteProject projectId={projectId} projectName={project.name} />
         )}
       </main>
     </div>
@@ -580,5 +586,60 @@ function TagsSection({ projectId, tags, setTags, canEdit }: TagsProps) {
       )}
       {error && <p className="error">{error}</p>}
     </div>
+  )
+}
+
+// Owner only (the "owner deletes project" RLS policy enforces it). Deleting
+// cascades to members, tags, submissions, participants, media rows and jobs.
+// TODO: once uploads exist, the R2 files also need deleting (server-side).
+function DeleteProject({ projectId, projectName }: { projectId: string; projectName: string }) {
+  const navigate = useNavigate()
+  const [confirm, setConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const matches = confirm.trim() === projectName.trim()
+
+  async function onDelete(e: FormEvent) {
+    e.preventDefault()
+    if (!matches) return
+    setDeleting(true)
+    setError(null)
+    // .select() returns the deleted rows, so a delete blocked by RLS (0 rows) shows as an error.
+    const { data, error } = await supabase.from('projects').delete().eq('id', projectId).select('id')
+    setDeleting(false)
+    if (error || !data?.length) {
+      setError(error?.message ?? 'Only the owner can delete this project.')
+      return
+    }
+    navigate('/', { replace: true })
+  }
+
+  return (
+    <details className="danger-zone">
+      <summary>Delete project</summary>
+      <form className="fields" onSubmit={onDelete}>
+        <p className="warn">
+          This permanently deletes the project, its team, tags and all submissions. It can't be undone.
+        </p>
+        <div className="field">
+          <label className="label" htmlFor="confirm-delete">Type the project name to confirm</label>
+          <div className="input">
+            <input
+              id="confirm-delete"
+              autoComplete="off"
+              placeholder={projectName}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="row">
+          <button className="btn danger" type="submit" disabled={!matches || deleting}>
+            {deleting ? 'Deleting…' : 'Delete project'}
+          </button>
+          {error && <p className="error">{error}</p>}
+        </div>
+      </form>
+    </details>
   )
 }
