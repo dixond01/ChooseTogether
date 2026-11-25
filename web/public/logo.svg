@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" role="img" aria-label="ChooseTogether">
+  <circle cx="15" cy="36" r="13" fill="#d1a318"/>
+  <rect x="29" y="25" width="20" height="20" rx="3.5" fill="#3b3e37" transform="rotate(-14 39 35)"/>
+  <polygon points="27,4 39,23 15,23" fill="#6e2f63" stroke="#6e2f63" stroke-width="4" stroke-linejoin="round" transform="rotate(10 27 16)"/>
+</svg>

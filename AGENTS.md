@@ -22,6 +22,17 @@ React + TypeScript (Vite) on GitHub Pages · Supabase (Postgres, Auth magic link
 - **AI only suggests.** It never changes data itself.
 - **GitHub Pages hosting:** use a **hash router** (`/#/...`) because Pages can't serve deep links. Vite `base` must match the Pages path (`/ChooseTogether/`) unless a custom domain is used. Supabase Auth redirect URLs must include the Pages URL.
 
+## UI design
+- **Helper text is a last resort.** Don't add small explanatory text (subtitles, hints, "what this does" lines) under headings or fields. Let signifiers do the explaining: clear labels, placeholders, units, input types, icons, grouping and sensible defaults. Use helper text only when a mistake would be costly or hard to undo (e.g. "Changing this breaks links you've already shared").
+- **Less text, no decoration.** No eyebrow lines above titles (e.g. "SETTINGS · REVIEW"), no captions on choice cards, no monospace or all-caps labels, no decorative symbols (✦, →). These make the UI look generic and AI-made.
+- **Type (Google Fonts):** large titles in **Marcellus** (e.g. 56px page titles, 26px project name in the sidebar). Everything else is **Tenor Sans**: body, buttons, inputs, values. Field labels are Tenor Sans **bold** 15px, sentence case. Tenor Sans has one weight (bold is browser-synthesized), so build hierarchy mostly with big size jumps.
+- **Palette:** white `#ffffff` page and top bar, light plum tint `#f8f1f6` for the sidebar, charcoal `#3b3e37` for most text (`#5f625a` for secondary), plum `#6e2f63` as the main accent, plum tint `#f6eef4` for selected/focus states, pale plum `#ecdfe8` for divider lines, gold `#d1a318` as a rare accent for small markers only (never text). No creams.
+- **Controls:** inputs, steppers, choice cards and tags are white with a 1px plum border. Focus adds a plum ring plus a soft plum-tint glow; a selected choice card gets the plum-tint fill and a thicker plum border. Size each field to its content (e.g. ~150px for numbers with units, ~270px for dates, ~420px for names, full column ~680px for paragraphs). Put units inside the field ("90 min"), prefer steppers, switches and choice cards over bare number inputs and selects, and show read-only values (e.g. a formatted date) with a "Change" link.
+- **Buttons:** one filled plum primary per section, named for what it does ("Save review rules"), disabled until something changes; secondary actions are plain plum text links.
+- **Shape:** rounded corners (10px), pills for tags. Prefer spacing and thin rules over bordered cards. Keep animations fast or none.
+- **Logo:** `web/public/logo.svg` ("Tumble"): a gold circle, charcoal square and plum triangle as playful wooden shape-sorter pieces, slightly tilted, no holes. Shown left of the Marcellus "ChooseTogether" wordmark.
+- **Layout:** pages fill the width. Settings use a left sidebar of sections with one section shown at a time, and rarely changed options are collapsed (progressive disclosure).
+
 ## Spec map (`Documents/spec/`)
 | Working on | Read |
 |---|---|

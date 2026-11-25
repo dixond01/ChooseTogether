@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
 
 // Only the public project URL and anon/publishable key belong here.
 // Never put a service role or secret key in a VITE_ variable: it ships to the browser.
@@ -12,7 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     // PKCE returns the magic-link result as ?code=... instead of #access_token=...,
     // so it doesn't collide with the hash router's /#/ routes.
