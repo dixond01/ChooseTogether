@@ -43,5 +43,5 @@ Submissions are final, so field definitions are limited once answers exist:
 - **Submissions are final**: no editing or replacing. Before the submit button, show: *"Submissions are final and can't be edited. To make changes, contact the organizer at {owner email}."*
 - After the deadline, the form shows "Submissions are closed."
 - No phone number and no guardian fields (no minors).
-- Add spam protection (rate limiting and/or Cloudflare Turnstile). This is a new technology, so tell the user before adding it.
-- The submit Edge Function validates the core fields, the participant rules, required custom fields and answer types against the project's (non-hidden) fields, all in one transaction.
+- Spam protection: **Cloudflare Turnstile**. The widget is invisible unless Cloudflare wants a click, Submit stays disabled until it gives a token, and the submit Edge Function verifies the token (each works once, so the form gets a new one after every try).
+- The submit Edge Function checks Turnstile, then calls `create_submission()`, which validates the core fields, the participant rules, the file (requirement, accepted kind, 5 GB, duration) and required custom fields and answer types against the project's (non-hidden) fields, and inserts everything in one transaction.

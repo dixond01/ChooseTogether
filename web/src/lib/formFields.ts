@@ -167,8 +167,13 @@ export function validate(d: Draft, form: PublicForm, fields: PublicField[]): Err
   return e
 }
 
+// R2's limit for one upload (same check as media_files_max_size).
+export const MAX_FILE_BYTES = 5_000_000_000
+
 export function checkFile(f: FileInfo, form: PublicForm): string | null {
   if (!form.accepted_kinds.includes(f.kind)) return 'This kind of file isn’t accepted.'
+  if (f.file.size === 0) return 'This file is empty.'
+  if (f.file.size > MAX_FILE_BYTES) return 'Files can be up to 5 GB.'
   const max = form.max_duration_seconds
   if (max && f.duration !== null && (f.kind === 'video' || f.kind === 'audio') && f.duration > max + 0.5) {
     return `This file is ${formatDuration(f.duration)} long. The limit is ${formatDuration(max)}.`

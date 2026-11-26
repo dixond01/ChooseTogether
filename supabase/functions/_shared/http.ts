@@ -28,11 +28,19 @@ export const adminClient = () =>
 
 type Caller = { user: User; token: string; asCaller: SupabaseClient }
 
+// CORS preflight and method check. Returns a Response to send back as-is, or
+// null to go on. Public functions (no sign-in) call only this.
+export function checkMethod(req: Request): Response | null {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+  if (req.method !== 'POST') return json(405, { error: 'Use POST' })
+  return null
+}
+
 // Handles CORS/method checks and identifies the signed-in caller.
 // Returns a Response to send back as-is when the request can't go on.
 export async function getCaller(req: Request): Promise<Caller | Response> {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
-  if (req.method !== 'POST') return json(405, { error: 'Use POST' })
+  const early = checkMethod(req)
+  if (early) return early
 
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
   if (!token) return json(401, { error: 'You must be signed in.' })

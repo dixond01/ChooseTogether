@@ -419,6 +419,13 @@ verify_jwt = false
 [functions.decide-project-request]
 verify_jwt = false
 
+# Public (no sign-in): the form sends only the anon key.
+[functions.submit]
+verify_jwt = false
+
+[functions.upload]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
