@@ -129,6 +129,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"project_fields": {
+                  Row: {
+                    "archived_at": string | null,"created_at": string,"id": string,"label": string,"options": (string)[] | null,"placeholder": string | null,"position": number,"project_id": string,"required": boolean,"type": Database["public"]['Enums']["field_type"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"label": string,"options"?: (string)[] | null,"placeholder"?: string | null,"position": number,"project_id": string,"required"?: boolean,"type": Database["public"]['Enums']["field_type"]
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"label"?: string,"options"?: (string)[] | null,"placeholder"?: string | null,"position"?: number,"project_id"?: string,"required"?: boolean,"type"?: Database["public"]['Enums']["field_type"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "project_fields_project_id_fkey"
+      columns: ["project_id"]
+isOneToOne: false
+      referencedRelation: "projects"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"project_members": {
                   Row: {
                     "email": string,"id": string,"in_review_rotation": boolean,"invited_at": string,"project_id": string,"revoked_at": string | null,"role": Database["public"]['Enums']["member_role"],"user_id": string | null
@@ -171,14 +191,14 @@ isOneToOne: false
                   ]
                 },"projects": {
                   Row: {
-                    "agreement_text": string | null,"created_at": string,"decision_rule": Database["public"]['Enums']["decision_rule"],"id": string,"max_duration_seconds": number | null,"max_participants": number | null,"name": string,"results_sent_at": string | null,"retention_grace_days": number,"retention_policy": Database["public"]['Enums']["retention_policy"],"reviewers_per_submission": number,"score_required": boolean,"slug": string,"submissions_close_at": string,"target_show_seconds": number | null
+                    "accepted_kinds": (Database["public"]['Enums']["media_kind"])[],"agreement_text": string | null,"created_at": string,"decision_rule": Database["public"]['Enums']["decision_rule"],"description_label": string,"file_label": string,"file_requirement": Database["public"]['Enums']["file_requirement"],"id": string,"max_duration_seconds": number | null,"max_participants": number | null,"name": string,"participant_label": string,"participants_label": string,"results_sent_at": string | null,"retention_grace_days": number,"retention_policy": Database["public"]['Enums']["retention_policy"],"reviewers_per_submission": number,"score_required": boolean,"show_enabled": boolean,"slug": string,"submissions_close_at": string,"target_show_seconds": number | null,"title_label": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "agreement_text"?: string | null,"created_at"?: string,"decision_rule"?: Database["public"]['Enums']["decision_rule"],"id"?: string,"max_duration_seconds"?: number | null,"max_participants"?: number | null,"name": string,"results_sent_at"?: string | null,"retention_grace_days"?: number,"retention_policy"?: Database["public"]['Enums']["retention_policy"],"reviewers_per_submission"?: number,"score_required"?: boolean,"slug": string,"submissions_close_at": string,"target_show_seconds"?: number | null
+                    "accepted_kinds"?: (Database["public"]['Enums']["media_kind"])[],"agreement_text"?: string | null,"created_at"?: string,"decision_rule"?: Database["public"]['Enums']["decision_rule"],"description_label"?: string,"file_label"?: string,"file_requirement"?: Database["public"]['Enums']["file_requirement"],"id"?: string,"max_duration_seconds"?: number | null,"max_participants"?: number | null,"name": string,"participant_label"?: string,"participants_label"?: string,"results_sent_at"?: string | null,"retention_grace_days"?: number,"retention_policy"?: Database["public"]['Enums']["retention_policy"],"reviewers_per_submission"?: number,"score_required"?: boolean,"show_enabled"?: boolean,"slug": string,"submissions_close_at": string,"target_show_seconds"?: number | null,"title_label"?: string
                   }
                   Update: {
-                    "agreement_text"?: string | null,"created_at"?: string,"decision_rule"?: Database["public"]['Enums']["decision_rule"],"id"?: string,"max_duration_seconds"?: number | null,"max_participants"?: number | null,"name"?: string,"results_sent_at"?: string | null,"retention_grace_days"?: number,"retention_policy"?: Database["public"]['Enums']["retention_policy"],"reviewers_per_submission"?: number,"score_required"?: boolean,"slug"?: string,"submissions_close_at"?: string,"target_show_seconds"?: number | null
+                    "accepted_kinds"?: (Database["public"]['Enums']["media_kind"])[],"agreement_text"?: string | null,"created_at"?: string,"decision_rule"?: Database["public"]['Enums']["decision_rule"],"description_label"?: string,"file_label"?: string,"file_requirement"?: Database["public"]['Enums']["file_requirement"],"id"?: string,"max_duration_seconds"?: number | null,"max_participants"?: number | null,"name"?: string,"participant_label"?: string,"participants_label"?: string,"results_sent_at"?: string | null,"retention_grace_days"?: number,"retention_policy"?: Database["public"]['Enums']["retention_policy"],"reviewers_per_submission"?: number,"score_required"?: boolean,"show_enabled"?: boolean,"slug"?: string,"submissions_close_at"?: string,"target_show_seconds"?: number | null,"title_label"?: string
                   }
                   Relationships: [
                     
@@ -197,16 +217,42 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"submissions": {
+                },"submission_answers": {
                   Row: {
-                    "act_title": string,"agreed_at": string,"description": string,"id": string,"last_emailed_status": Database["public"]['Enums']["submission_status"] | null,"project_id": string,"stage_needs": string | null,"status": Database["public"]['Enums']["submission_status"],"submitted_at": string
+                    "field_id": string,"submission_id": string,"value_bool": boolean | null,"value_date": string | null,"value_number": number | null,"value_text": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "act_title": string,"agreed_at": string,"description": string,"id"?: string,"last_emailed_status"?: Database["public"]['Enums']["submission_status"] | null,"project_id": string,"stage_needs"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submitted_at"?: string
+                    "field_id": string,"submission_id": string,"value_bool"?: boolean | null,"value_date"?: string | null,"value_number"?: number | null,"value_text"?: string | null
                   }
                   Update: {
-                    "act_title"?: string,"agreed_at"?: string,"description"?: string,"id"?: string,"last_emailed_status"?: Database["public"]['Enums']["submission_status"] | null,"project_id"?: string,"stage_needs"?: string | null,"status"?: Database["public"]['Enums']["submission_status"],"submitted_at"?: string
+                    "field_id"?: string,"submission_id"?: string,"value_bool"?: boolean | null,"value_date"?: string | null,"value_number"?: number | null,"value_text"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "submission_answers_field_id_fkey"
+      columns: ["field_id"]
+isOneToOne: false
+      referencedRelation: "project_fields"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "submission_answers_submission_id_fkey"
+      columns: ["submission_id"]
+isOneToOne: false
+      referencedRelation: "submissions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"submissions": {
+                  Row: {
+                    "act_title": string,"agreed_at": string,"description": string,"id": string,"last_emailed_status": Database["public"]['Enums']["submission_status"] | null,"project_id": string,"status": Database["public"]['Enums']["submission_status"],"submitted_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "act_title": string,"agreed_at": string,"description": string,"id"?: string,"last_emailed_status"?: Database["public"]['Enums']["submission_status"] | null,"project_id": string,"status"?: Database["public"]['Enums']["submission_status"],"submitted_at"?: string
+                  }
+                  Update: {
+                    "act_title"?: string,"agreed_at"?: string,"description"?: string,"id"?: string,"last_emailed_status"?: Database["public"]['Enums']["submission_status"] | null,"project_id"?: string,"status"?: Database["public"]['Enums']["submission_status"],"submitted_at"?: string
                   }
                   Relationships: [
                     {
@@ -251,21 +297,29 @@ isOneToOne: false
                            },
 "create_project":
 { Args: { "p_name": string,"p_slug": string,"p_submissions_close_at": string }; Returns: {
-              "agreement_text": string | null,
+              "accepted_kinds": (Database["public"]['Enums']["media_kind"])[],
+"agreement_text": string | null,
 "created_at": string,
 "decision_rule": Database["public"]['Enums']["decision_rule"],
+"description_label": string,
+"file_label": string,
+"file_requirement": Database["public"]['Enums']["file_requirement"],
 "id": string,
 "max_duration_seconds": number | null,
 "max_participants": number | null,
 "name": string,
+"participant_label": string,
+"participants_label": string,
 "results_sent_at": string | null,
 "retention_grace_days": number,
 "retention_policy": Database["public"]['Enums']["retention_policy"],
 "reviewers_per_submission": number,
 "score_required": boolean,
+"show_enabled": boolean,
 "slug": string,
 "submissions_close_at": string,
-"target_show_seconds": number | null
+"target_show_seconds": number | null,
+"title_label": string
             }
                           SetofOptions: {
         from: "*"
@@ -300,26 +354,39 @@ isOneToOne: false
                            },
 "get_public_form":
 { Args: { "p_slug": string }; Returns: {
-              "agreement_text": string,"is_open": boolean,"max_duration_seconds": number,"max_participants": number,"name": string,"organizer_email": string,"project_id": string,"submissions_close_at": string
+              "accepted_kinds": (Database["public"]['Enums']["media_kind"])[],"agreement_text": string,"description_label": string,"file_label": string,"file_requirement": Database["public"]['Enums']["file_requirement"],"is_open": boolean,"max_duration_seconds": number,"max_participants": number,"name": string,"organizer_email": string,"participant_label": string,"participants_label": string,"project_id": string,"submissions_close_at": string,"title_label": string
+            }[]
+                           },
+"get_public_form_fields":
+{ Args: { "p_slug": string }; Returns: {
+              "id": string,"label": string,"options": (string)[],"placeholder": string,"required": boolean,"type": Database["public"]['Enums']["field_type"]
             }[]
                            },
 "insert_project_with_owner":
 { Args: { "p_name": string,"p_owner_email": string,"p_owner_id": string,"p_slug": string,"p_submissions_close_at": string }; Returns: {
-              "agreement_text": string | null,
+              "accepted_kinds": (Database["public"]['Enums']["media_kind"])[],
+"agreement_text": string | null,
 "created_at": string,
 "decision_rule": Database["public"]['Enums']["decision_rule"],
+"description_label": string,
+"file_label": string,
+"file_requirement": Database["public"]['Enums']["file_requirement"],
 "id": string,
 "max_duration_seconds": number | null,
 "max_participants": number | null,
 "name": string,
+"participant_label": string,
+"participants_label": string,
 "results_sent_at": string | null,
 "retention_grace_days": number,
 "retention_policy": Database["public"]['Enums']["retention_policy"],
 "reviewers_per_submission": number,
 "score_required": boolean,
+"show_enabled": boolean,
 "slug": string,
 "submissions_close_at": string,
-"target_show_seconds": number | null
+"target_show_seconds": number | null,
+"title_label": string
             }
                           SetofOptions: {
         from: "*"
@@ -338,10 +405,13 @@ isOneToOne: false
                            },
 "my_role":
 { Args: { "p_project_id": string }; Returns: Database["public"]['Enums']["member_role"]
+                           },
+"reorder_project_fields":
+{ Args: { "p_ids": (string)[],"p_project_id": string }; Returns: undefined
                            }
           }
           Enums: {
-            "decision_rule": "any_disagreement_to_owner"|"majority","job_mode": "standard"|"safe","job_status": "awaiting_upload"|"queued"|"running"|"done"|"failed","media_kind": "video"|"audio"|"image"|"text","member_role": "owner"|"co_manager"|"member","processing_status": "pending"|"ready"|"failed","request_status": "pending"|"approved"|"denied","retention_policy": "after_conversion"|"until_results_sent"|"forever","submission_status": "submitted"|"in_review"|"pending_decision"|"selected"|"waitlisted"|"not_selected"
+            "decision_rule": "any_disagreement_to_owner"|"majority","field_type": "short_text"|"long_text"|"number"|"choice"|"checkbox"|"date","file_requirement": "required"|"optional"|"none","job_mode": "standard"|"safe","job_status": "awaiting_upload"|"queued"|"running"|"done"|"failed","media_kind": "video"|"audio"|"image"|"text","member_role": "owner"|"co_manager"|"member","processing_status": "pending"|"ready"|"failed","request_status": "pending"|"approved"|"denied","retention_policy": "after_conversion"|"until_results_sent"|"forever","submission_status": "submitted"|"in_review"|"pending_decision"|"selected"|"waitlisted"|"not_selected"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -461,7 +531,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "decision_rule": ["any_disagreement_to_owner", "majority"],"job_mode": ["standard", "safe"],"job_status": ["awaiting_upload", "queued", "running", "done", "failed"],"media_kind": ["video", "audio", "image", "text"],"member_role": ["owner", "co_manager", "member"],"processing_status": ["pending", "ready", "failed"],"request_status": ["pending", "approved", "denied"],"retention_policy": ["after_conversion", "until_results_sent", "forever"],"submission_status": ["submitted", "in_review", "pending_decision", "selected", "waitlisted", "not_selected"]
+            "decision_rule": ["any_disagreement_to_owner", "majority"],"field_type": ["short_text", "long_text", "number", "choice", "checkbox", "date"],"file_requirement": ["required", "optional", "none"],"job_mode": ["standard", "safe"],"job_status": ["awaiting_upload", "queued", "running", "done", "failed"],"media_kind": ["video", "audio", "image", "text"],"member_role": ["owner", "co_manager", "member"],"processing_status": ["pending", "ready", "failed"],"request_status": ["pending", "approved", "denied"],"retention_policy": ["after_conversion", "until_results_sent", "forever"],"submission_status": ["submitted", "in_review", "pending_decision", "selected", "waitlisted", "not_selected"]
           }
         }
 } as const

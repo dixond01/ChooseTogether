@@ -294,3 +294,79 @@ details[open] > summary { margin-bottom: 14px; }
 a.textbtn { text-decoration: none; }
 a.textbtn:hover { text-decoration: underline; }
 .request-remove { margin-left: auto; }
+
+/* checkbox inside a choice card (Accepted Files) */
+.choice input[type="checkbox"], .check input[type="checkbox"] {
+  appearance: none; margin: 0; flex: none; cursor: pointer;
+  width: 18px; height: 18px; border-radius: 4px;
+  background: var(--white); border: 1px solid var(--plum);
+}
+.choice input[type="checkbox"]:checked, .check input[type="checkbox"]:checked {
+  background: var(--plum) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 L5 8.6 L9.6 3.6' fill='none' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+.choice input[type="checkbox"]:focus-visible { outline: none; }
+.check input[type="checkbox"]:focus-visible { outline: 2px solid var(--plum); outline-offset: 2px; }
+.choice:has(input:disabled) input { cursor: default; }
+
+/* Settings -> Form Fields */
+.form-fields { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.form-fields > li { border-bottom: 1px solid var(--line); }
+.form-fields > li.is-hidden .ff-label { color: var(--ink-soft); }
+.ff-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; }
+.ff-label { font-size: 17px; min-width: 0; overflow-wrap: anywhere; }
+.ff-row .team-actions { align-self: center; }
+.ff-move { display: inline-flex; flex-direction: column; }
+.ff-move button {
+  display: grid; place-items: center; width: 24px; height: 18px; padding: 0;
+  border: 0; background: none; color: var(--plum); cursor: pointer; border-radius: 4px;
+}
+.ff-move button:hover:not(:disabled) { background: var(--plum-tint); }
+.ff-move button:disabled { color: var(--plum-line); cursor: default; }
+.ff-editor { gap: 28px; padding: 28px 0; }
+.ff-options { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ff-options li { display: flex; align-items: center; gap: 16px; }
+.ff-options .input { flex: 1; max-width: 340px; }
+.ff-options input[readonly] { color: var(--ink-soft); }
+
+/* ---------- public form ---------- */
+.public-head {
+  display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 32px;
+  border-bottom: 1px solid var(--line); font: 400 20px/1 var(--display);
+}
+.public-head img { width: 26px; height: 26px; }
+.public-main { padding: 48px 64px 96px; max-width: 900px; }
+.public-closed { font-size: 20px; margin: 0; }
+fieldset.field { border: 0; padding: 0; margin: 0; }
+fieldset.field > legend { padding: 0; margin-bottom: 10px; }
+.participants ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.participants li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 70px; gap: 12px; align-items: start; }
+.participants li .field { gap: 6px; }
+.participants li .textbtn { padding-top: 13px; justify-self: start; }
+.participants > .muted { margin: -4px 0 4px; font-size: 14px; }
+.input:has([aria-invalid="true"]) { border-color: var(--error); }
+.filepick {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; max-width: 680px; padding: 18px 20px;
+  border: 1px dashed var(--plum); border-radius: var(--radius); cursor: pointer; background: var(--white);
+}
+.filepick:has([aria-invalid="true"]) { border-color: var(--error); }
+.filepick:hover, .filepick:focus-within { background: var(--plum-tint); }
+.filepick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.filepick .filename { font-size: 17px; overflow-wrap: anywhere; }
+.filepick .textbtn { margin-left: auto; }
+.filepick:not(.has-file) .textbtn { margin-left: 0; font-size: 15px; }
+.field > .muted { margin: 0; font-size: 14px; }
+.check { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; max-width: 680px; }
+.check input { margin-top: 3px !important; }
+.check:has([aria-invalid="true"]) input { border-color: var(--error); }
+.agreement { white-space: pre-wrap; }
+.actions.submit { flex-direction: column; align-items: flex-start; gap: 20px; }
+@media (max-width: 860px) {
+  .public-head { padding: 0 16px; }
+  .public-main { padding: 28px 16px 64px; }
+  .participants li { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .participants li .textbtn { padding-top: 0; }
+}
+
+/* A second part of a settings page (e.g. Form Fields under Submission Form) */
+.subsection { margin-top: 64px; max-width: 680px; }
+.subhead { font: 400 24px/1.2 var(--display); margin-bottom: 20px; }
