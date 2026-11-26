@@ -6,7 +6,9 @@ import {
   formatDeadline, formatShortDate, publicFormUrl, SLUG_PATTERN, toLocalInput,
 } from '../lib/format'
 import { isTemplateDirty, type Drafts, type Template } from '../lib/emailTemplates'
+import { FILE_REQUIREMENTS, MEDIA_KINDS, type FileRequirement, type MediaKind } from '../lib/formFields'
 import EmailTemplates from './EmailTemplates'
+import FormFieldsSection from './FormFieldsSection'
 import TeamSection from './TeamSection'
 
 type Project = Tables<'projects'>
@@ -21,25 +23,35 @@ type Form = {
   maxParticipants: string
   maxMinutes: string
   agreement: string
+  titleLabel: string
+  descriptionLabel: string
+  participantLabel: string
+  participantsLabel: string
+  fileLabel: string
+  fileRequirement: FileRequirement
+  acceptedKinds: string // comma list in MEDIA_KINDS order, so it compares as a plain value
   reviewers: number
   decisionRule: Enums<'decision_rule'>
   scoreRequired: boolean
   retention: Enums<'retention_policy'>
   graceDays: string
   targetMinutes: string
+  showEnabled: boolean
 }
 
-type SectionId = 'basics' | 'team' | 'form' | 'review' | 'tags' | 'emails' | 'files' | 'show'
+type SectionId = 'basics' | 'team' | 'form' | 'review' | 'emails' | 'files' | 'show'
 
 const SECTIONS: { id: SectionId; label: string; save?: string; keys: (keyof Form)[] }[] = [
-  { id: 'basics', label: 'Basics', save: 'Save Basics', keys: ['name', 'slug', 'closesAt'] },
+  { id: 'basics', label: 'Basics', save: 'Save Basics', keys: ['name', 'slug', 'closesAt', 'showEnabled'] },
   { id: 'team', label: 'Team', keys: [] }, // each invite/removal saves on its own
   {
     id: 'form', label: 'Submission Form', save: 'Save Form Settings',
-    keys: ['limitParticipants', 'maxParticipants', 'maxMinutes', 'agreement'],
+    keys: [
+      'limitParticipants', 'maxParticipants', 'maxMinutes', 'agreement', 'titleLabel', 'descriptionLabel',
+      'participantLabel', 'participantsLabel', 'fileLabel', 'fileRequirement', 'acceptedKinds',
+    ],
   },
-  { id: 'review', label: 'Review', save: 'Save Review Rules', keys: ['reviewers', 'decisionRule', 'scoreRequired'] },
-  { id: 'tags', label: 'Tags', keys: [] }, // tags save as you add/remove them
+  { id: 'review', label: 'Reviewing', save: 'Save Review Rules', keys: ['reviewers', 'decisionRule', 'scoreRequired'] },
   { id: 'emails', label: 'Emails', keys: [] }, // templates save one status at a time
   { id: 'files', label: 'Files', save: 'Save File Settings', keys: ['retention', 'graceDays'] },
   { id: 'show', label: 'Show', save: 'Save Show Settings', keys: ['targetMinutes'] },
@@ -55,7 +67,18 @@ const RETENTION: [Enums<'retention_policy'>, string][] = [
   ['after_conversion', 'Delete After Conversion'],
   ['forever', 'Keep Forever'],
 ]
+// Sections merged into others keep working as old links.
+const MOVED: Record<string, SectionId> = { fields: 'form', tags: 'review' }
 const MAX_REVIEWERS = 10
+
+const LABEL_KEYS = ['titleLabel', 'descriptionLabel', 'participantLabel', 'participantsLabel', 'fileLabel'] as const
+const LABEL_NAMES: Record<(typeof LABEL_KEYS)[number], string> = {
+  titleLabel: 'Title',
+  descriptionLabel: 'Description',
+  participantLabel: 'One Participant',
+  participantsLabel: 'Several Participants',
+  fileLabel: 'File',
+}
 
 function toForm(p: Project): Form {
   return {
@@ -66,14 +89,29 @@ function toForm(p: Project): Form {
     maxParticipants: String(p.max_participants ?? 6),
     maxMinutes: p.max_duration_seconds ? String(p.max_duration_seconds / 60) : '',
     agreement: p.agreement_text ?? '',
+    titleLabel: p.title_label,
+    descriptionLabel: p.description_label,
+    participantLabel: p.participant_label,
+    participantsLabel: p.participants_label,
+    fileLabel: p.file_label,
+    fileRequirement: p.file_requirement,
+    acceptedKinds: joinKinds(p.accepted_kinds),
     reviewers: p.reviewers_per_submission,
     decisionRule: p.decision_rule,
     scoreRequired: p.score_required,
     retention: p.retention_policy,
     graceDays: String(p.retention_grace_days),
     targetMinutes: p.target_show_seconds ? String(p.target_show_seconds / 60) : '',
+    showEnabled: p.show_enabled,
   }
 }
+
+function joinKinds(kinds: MediaKind[]) {
+  return MEDIA_KINDS.map(([k]) => k).filter((k) => kinds.includes(k)).join(',')
+}
+const splitKinds = (v: string) => (v ? v.split(',') : []) as MediaKind[]
+const acceptsTimed = (f: Form) =>
+  f.fileRequirement !== 'none' && splitKinds(f.acceptedKinds).some((k) => k === 'video' || k === 'audio')
 
 // Blank = null (no limit / not set). Minutes are stored as whole seconds.
 const minutesToSeconds = (v: string) => (v.trim() === '' ? null : Math.round(Number(v) * 60))
@@ -85,12 +123,21 @@ function toUpdate(section: SectionId, f: Form): TablesUpdate<'projects'> {
         name: f.name.trim(),
         slug: f.slug,
         submissions_close_at: new Date(f.closesAt).toISOString(),
+        show_enabled: f.showEnabled,
       }
     case 'form':
       return {
         max_participants: f.limitParticipants ? Number(f.maxParticipants) : null,
         max_duration_seconds: minutesToSeconds(f.maxMinutes),
         agreement_text: f.agreement.trim() || null,
+        title_label: f.titleLabel.trim(),
+        description_label: f.descriptionLabel.trim(),
+        participant_label: f.participantLabel.trim(),
+        participants_label: f.participantsLabel.trim(),
+        file_label: f.fileLabel.trim(),
+        file_requirement: f.fileRequirement,
+        // Unchanged when there's no file, so switching back keeps the old choice.
+        accepted_kinds: splitKinds(f.acceptedKinds),
       }
     case 'review':
       return {
@@ -151,6 +198,9 @@ export default function ProjectSettings() {
     load()
   }, [projectId])
 
+  if (sectionParam && MOVED[sectionParam]) {
+    return <Navigate to={`/projects/${projectId}/settings/${MOVED[sectionParam]}`} replace />
+  }
   const section = SECTIONS.find((s) => s.id === sectionParam)
   if (sectionParam && !section) return <Navigate to={`/projects/${projectId}/settings`} replace />
   const current = section ?? SECTIONS[0]
@@ -164,6 +214,9 @@ export default function ProjectSettings() {
     )
   }
   if (!project || !form || !saved) return <p className="loading">Loading…</p>
+  // Show settings appear once they're turned on (and saved) in Basics.
+  const visibleSections = SECTIONS.filter((s) => s.id !== 'show' || saved.showEnabled)
+  if (!visibleSections.includes(current)) return <Navigate to={`/projects/${projectId}/settings`} replace />
 
   const isDirty = (id: SectionId) =>
     id === 'emails'
@@ -189,14 +242,13 @@ export default function ProjectSettings() {
           {closed ? 'Closed' : 'Closes'} {formatShortDate(project.submissions_close_at)}
         </div>
         <nav className="nav" aria-label="Settings sections">
-          {SECTIONS.map((s) => (
+          {visibleSections.map((s) => (
             <Link
               key={s.id}
               to={`/projects/${projectId}/settings/${s.id}`}
               aria-current={s.id === current.id ? 'page' : undefined}
             >
               {s.label}
-              {s.id === 'tags' && <span className="count">{tags.length}</span>}
               {isDirty(s.id) && <span className="dirty" aria-label="Unsaved changes" />}
             </Link>
           ))}
@@ -207,8 +259,6 @@ export default function ProjectSettings() {
         <h1 className="page-title">{current.label}</h1>
         {current.id === 'team' ? (
           <TeamSection projectId={projectId} canEdit={canEdit} />
-        ) : current.id === 'tags' ? (
-          <TagsSection projectId={projectId} tags={tags} setTags={setTags} canEdit={canEdit} />
         ) : current.id === 'emails' ? (
           <EmailTemplates
             templates={templates}
@@ -231,6 +281,18 @@ export default function ProjectSettings() {
             canEdit={canEdit}
             onSaved={onSaved}
           />
+        )}
+        {current.id === 'form' && (
+          <section className="subsection">
+            <h2 className="subhead">Form Fields</h2>
+            <FormFieldsSection projectId={projectId} canEdit={canEdit} />
+          </section>
+        )}
+        {current.id === 'review' && (
+          <section className="subsection">
+            <h2 className="subhead">Tags</h2>
+            <TagsSection projectId={projectId} tags={tags} setTags={setTags} canEdit={canEdit} />
+          </section>
         )}
         {current.id === 'basics' && isOwner && (
           <DeleteProject projectId={projectId} projectName={project.name} />
@@ -357,11 +419,64 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                   </details>
                 )}
               </div>
+
+              <div className="field">
+                <span className="label">Show Planning</span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={form.showEnabled}
+                    onChange={(e) => set('showEnabled', e.target.checked)}
+                  />
+                  Enable Show Settings
+                </label>
+              </div>
             </>
           )}
 
           {section.id === 'form' && (
             <>
+              <div className="field">
+                <span className="label">File Upload</span>
+                <div className="choices" role="radiogroup">
+                  {FILE_REQUIREMENTS.map(([code, label]) => (
+                    <label key={code} className="choice">
+                      <input
+                        type="radio"
+                        name="file_requirement"
+                        checked={form.fileRequirement === code}
+                        onChange={() => set('fileRequirement', code)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {form.fileRequirement !== 'none' && (
+                <div className="field">
+                  <span className="label">Accepted Files</span>
+                  <div className="choices">
+                    {MEDIA_KINDS.map(([kind, label]) => {
+                      const kinds = splitKinds(form.acceptedKinds)
+                      const on = kinds.includes(kind)
+                      return (
+                        <label key={kind} className="choice">
+                          <input
+                            type="checkbox"
+                            checked={on}
+                            // At least one kind stays selected.
+                            disabled={on && kinds.length === 1}
+                            onChange={() =>
+                              set('acceptedKinds', joinKinds(on ? kinds.filter((k) => k !== kind) : [...kinds, kind]))
+                            }
+                          />
+                          {label}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="pair">
                 <div className="field">
                   <span className="label">Participants per Submission</span>
@@ -387,7 +502,7 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                     </div>
                   )}
                 </div>
-                <div className="field">
+                <div className="field" hidden={!acceptsTimed(form)}>
                   <label className="label" htmlFor="len">Max Video / Audio Length</label>
                   <div className="input narrow">
                     <input
@@ -414,6 +529,25 @@ function SectionForm({ projectId, section, form, setForm, saved, dirty, canEdit,
                   />
                 </div>
               </div>
+              <details open={LABEL_KEYS.some((k) => form[k] !== saved[k]) || undefined}>
+                <summary>Change Field Labels</summary>
+                <div className="pair">
+                  {LABEL_KEYS.filter((k) => k !== 'fileLabel' || form.fileRequirement !== 'none').map((k) => (
+                    <div className="field" key={k}>
+                      <label className="label" htmlFor={k}>{LABEL_NAMES[k]}</label>
+                      <div className="input">
+                        <input
+                          id={k}
+                          required
+                          maxLength={60}
+                          value={form[k]}
+                          onChange={(e) => set(k, e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </>
           )}
 

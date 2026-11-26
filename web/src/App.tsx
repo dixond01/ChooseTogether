@@ -7,6 +7,7 @@ import Projects from './pages/Projects'
 import NewProject from './pages/NewProject'
 import ProjectSettings from './pages/ProjectSettings'
 import AdminRequests from './pages/AdminRequests'
+import PublicForm from './pages/PublicForm'
 
 import { LOGO_URL } from './lib/format'
 
@@ -17,6 +18,8 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/sign-in" element={<SignInRoute />} />
+          {/* Public: performers and other submitters never sign in. */}
+          <Route path="/f/:slug" element={<PublicForm />} />
           <Route path="/" element={<RequireAuth><Projects /></RequireAuth>} />
           <Route path="/projects/new" element={<RequireAuth><NewProject /></RequireAuth>} />
           <Route

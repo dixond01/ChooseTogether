@@ -1,6 +1,7 @@
 # Files and Conversion
 
 ## Upload
+- A project can accept only some kinds of files, make the file optional, or ask for no file (see `submission-form.md`). With no file, there is no `media_files` row.
 - The browser uploads the original **directly to Cloudflare R2** through a signed upload URL, so large files never pass through the app's server. Large files may need multipart upload.
 - The submission is saved with `processing_status = pending`.
 
@@ -16,7 +17,7 @@
   - **Video** → H.264 MP4, max 1080p (smaller sources keep their resolution), `-crf 20 -preset medium`, fast start (`-movflags +faststart`)
   - **Audio** → MP3/AAC
   - **HEIC images** → JPEG/WebP
-  - **Text** → no conversion
+  - **Text** (.txt, .md, .rtf, .pdf, .doc, .docx) → no conversion; the job is marked `done` right away
 - Reviewers see "Processing…" until the file is ready.
 - Supabase Edge Functions can't run ffmpeg, which is why the conversion runs on Lambda.
 
