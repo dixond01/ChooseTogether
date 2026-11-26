@@ -4,7 +4,9 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useParams } from 'react-router'
 import { supabase } from '../lib/supabase'
+import { callFunction, putFile } from '../lib/functions'
 import { LOGO_URL } from '../lib/format'
+import { Turnstile } from '../components/Turnstile'
 import {
   acceptAttr, checkFile, formatDuration, formatSize, kindOf, readDuration, toPayload, validate,
   type Draft, type Errors, type PublicField, type PublicForm as Form,
@@ -73,6 +75,21 @@ function SubmissionForm({ form, fields }: { form: Form; fields: PublicField[] })
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
+  // Turnstile (bot check): each token works once, so it's reset after every try.
+  const [token, setToken] = useState<string | null>(null)
+  const [botCheckFailed, setBotCheckFailed] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
+  // After the submission is saved, the file uploads straight to R2.
+  const [upload, setUpload] = useState<{ jobId: string; progress: number; error: string | null } | null>(null)
+
+  // Leaving mid-upload would leave the submission without its file.
+  const uploading = upload !== null && upload.error === null && !done
+  useEffect(() => {
+    if (!uploading) return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [uploading])
 
   const max = form.max_participants
   const pLabel = form.participant_label
@@ -127,12 +144,36 @@ function SubmissionForm({ form, fields }: { form: Form; fields: PublicField[] })
       requestAnimationFrame(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus())
       return
     }
+    if (!token) return
     setSubmitting(true)
-    // The submit Edge Function (one-transaction insert, signed R2 upload,
-    // Turnstile) is the next step; until it exists this call fails.
-    const { error } = await supabase.functions.invoke('submit', { body: toPayload(draft, form, fields) })
+    const res = await callFunction<{ submission_id: string; upload: { job_id: string; url: string | null } | null }>(
+      'submit',
+      { ...toPayload(draft, form, fields), turnstile_token: token },
+    )
     setSubmitting(false)
-    if (error) return setSubmitError('Something went wrong, so your submission wasn’t sent. Please try again.')
+    setResetKey((k) => k + 1) // the token is used up either way
+    if (res.error) return setSubmitError(res.error)
+    if (!res.upload || !draft.file) return setDone(true)
+    await sendFile(res.upload.job_id, res.upload.url, draft.file.file)
+  }
+
+  // Uploads the file for a saved submission, then tells the server it arrived.
+  // With no URL (a retry, or signing failed), asks for a fresh one first.
+  async function sendFile(jobId: string, url: string | null, file: File) {
+    setUpload({ jobId, progress: 0, error: null })
+    const failed = (error: string) => setUpload({ jobId, progress: 0, error })
+    if (!url) {
+      const r = await callFunction<{ url: string }>('upload', { job_id: jobId, action: 'url' })
+      if (r.error) return failed(r.error)
+      url = r.url
+    }
+    try {
+      await putFile(url, file, (progress) => setUpload({ jobId, progress, error: null }))
+    } catch {
+      return failed('The upload stopped before it finished.')
+    }
+    const r = await callFunction<{ ok: true }>('upload', { job_id: jobId, action: 'complete' })
+    if (r.error) return failed(r.error)
     setDone(true)
   }
 
@@ -141,6 +182,46 @@ function SubmissionForm({ form, fields }: { form: Form; fields: PublicField[] })
       <>
         <h1 className="page-title">Thank You</h1>
         <p className="public-closed">Your submission to {form.name} was received.</p>
+      </>
+    )
+  }
+
+  if (upload && draft.file) {
+    const file = draft.file.file
+    return (
+      <>
+        <h1 className="page-title">{form.name}</h1>
+        <div className="upload">
+          <p className="filename">{file.name}</p>
+          {upload.error ? (
+            <>
+              <p className="error">
+                Your submission was saved, but the file didn’t finish uploading. {upload.error}
+              </p>
+              <div>
+                <button className="btn" type="button" onClick={() => sendFile(upload.jobId, null, file)}>
+                  Try Again
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div
+                className="progress"
+                role="progressbar"
+                aria-label="Upload progress"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(upload.progress * 100)}
+              >
+                <span style={{ width: `${upload.progress * 100}%` }} />
+              </div>
+              <p className="muted">
+                Uploading… {Math.round(upload.progress * 100)}% of {formatSize(file.size)}. Keep this page open.
+              </p>
+            </>
+          )}
+        </div>
       </>
     )
   }
@@ -305,8 +386,19 @@ function SubmissionForm({ form, fields }: { form: Form; fields: PublicField[] })
           Submissions are final and can't be edited. To make changes, contact the organizer at{' '}
           <a href={`mailto:${form.organizer_email}`}>{form.organizer_email}</a>.
         </p>
+        <Turnstile
+          resetKey={resetKey}
+          onToken={(t) => {
+            setToken(t)
+            if (t) setBotCheckFailed(false)
+          }}
+          onError={() => setBotCheckFailed(true)}
+        />
+        {botCheckFailed && (
+          <p className="error">The spam check couldn’t load. Refresh the page to try again.</p>
+        )}
         <div className="row">
-          <button className="btn" type="submit" disabled={submitting || checkingFile}>
+          <button className="btn" type="submit" disabled={submitting || checkingFile || !token}>
             {submitting ? 'Submitting…' : 'Submit'}
           </button>
           {tried && Object.keys(errors).length > 0 && <span className="error">Fix the highlighted fields.</span>}

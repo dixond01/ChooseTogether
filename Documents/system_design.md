@@ -14,7 +14,7 @@ flowchart LR
     subgraph Supabase
         AUTH["Auth<br/>(magic links)"]
         DB[("Postgres<br/>+ RLS")]
-        EF["Edge Functions<br/>submit · upload-url · invite<br/>assign · send-results · ai-suggest"]
+        EF["Edge Functions<br/>submit · upload · invite<br/>assign · send-results · ai-suggest"]
         CRON["pg_cron<br/>(auto-assign at deadline)"]
     end
 

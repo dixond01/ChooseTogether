@@ -360,6 +360,12 @@ fieldset.field > legend { padding: 0; margin-bottom: 10px; }
 .check:has([aria-invalid="true"]) input { border-color: var(--error); }
 .agreement { white-space: pre-wrap; }
 .actions.submit { flex-direction: column; align-items: flex-start; gap: 20px; }
+.turnstile:empty { display: none; }
+.upload { display: grid; gap: 14px; max-width: 680px; }
+.upload p { margin: 0; }
+.upload .filename { font-size: 20px; overflow-wrap: anywhere; }
+.progress { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.progress span { display: block; height: 100%; background: var(--plum); transition: width 0.2s linear; }
 @media (max-width: 860px) {
   .public-head { padding: 0 16px; }
   .public-main { padding: 28px 16px 64px; }

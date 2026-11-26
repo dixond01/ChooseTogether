@@ -327,6 +327,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_submission":
+{ Args: { "p_agreed": boolean,"p_answers": Json,"p_description": string,"p_file": Json,"p_participants": Json,"p_project_id": string,"p_title": string }; Returns: {
+              "job_id": string,"media_file_id": string,"original_key": string,"submission_id": string
+            }[]
+                           },
 "decide_project_request":
 { Args: { "p_approve": boolean,"p_note"?: string,"p_request_id": string }; Returns: {
               "created_at": string,

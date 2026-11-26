@@ -2,8 +2,13 @@
 
 ## Upload
 - A project can accept only some kinds of files, make the file optional, or ask for no file (see `submission-form.md`). With no file, there is no `media_files` row.
-- The browser uploads the original **directly to Cloudflare R2** through a signed upload URL, so large files never pass through the app's server. Large files may need multipart upload.
-- The submission is saved with `processing_status = pending`.
+- The browser uploads the original **directly to Cloudflare R2** through a signed upload URL, so large files never pass through the app's server. One upload (a single PUT) holds up to 5 GB, which is the file size limit. Multipart upload could raise it later.
+- The flow:
+  1. The `submit` Edge Function saves the submission, its `media_files` row (`processing_status = pending`) and a job in `awaiting_upload`, then returns the job ID and a signed upload URL (valid 1 hour).
+  2. The browser uploads with a progress bar. If the upload fails, the submission is already saved: **Try Again** asks the `upload` Edge Function for a fresh URL (`action: 'url'`) using the job ID, for up to 2 days.
+  3. The browser calls `upload` with `action: 'complete'`. It checks the object exists in R2 with the recorded size, then sets the job to `queued` (and will invoke the Lambda).
+- Object keys: `originals/{project_id}/{media_file_id}.{ext}`.
+- The R2 bucket needs a CORS rule allowing `PUT` with the `content-type` header from the site's origins.
 
 ## Conversion worker (AWS Lambda)
 - An **AWS Lambda** function running **ffmpeg** (from a layer or container image) converts one file per invocation.
