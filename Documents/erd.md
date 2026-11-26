@@ -12,12 +12,14 @@ flowchart LR
         auth_users --> project_members
         projects --> project_members
         projects --> tags
+        projects --> project_fields
     end
     subgraph Intake["2. Intake"]
         submissions --> participants
         participants --> participant_emails
         submissions --> media_files
         media_files --> processing_jobs
+        submissions --> submission_answers
     end
     subgraph Review["3. Review"]
         assignments --> votes
@@ -30,6 +32,7 @@ flowchart LR
         timelines --> timeline_items
     end
     projects --> submissions
+    project_fields --> submission_answers
     submissions --> assignments
     project_members --> assignments
     submissions --> submission_tags
@@ -50,6 +53,7 @@ erDiagram
     AUTH_USERS ||--o{ PROJECT_MEMBERS : "signs in as"
     PROJECTS ||--|{ PROJECT_MEMBERS : has
     PROJECTS ||--o{ TAGS : defines
+    PROJECTS ||--o{ PROJECT_FIELDS : "adds to form"
 
     AUTH_USERS {
         uuid id PK
@@ -69,6 +73,14 @@ erDiagram
         int retention_grace_days
         int target_show_seconds
         text agreement_text
+        text title_label "default Title"
+        text description_label "default Description"
+        text participant_label "default Participant"
+        text participants_label "default Participants"
+        text file_label "default File"
+        file_requirement file_requirement "required | optional | none"
+        media_kind_array accepted_kinds "at least one"
+        bool show_enabled "Show settings on/off"
         timestamptz results_sent_at
         timestamptz created_at
     }
@@ -87,6 +99,18 @@ erDiagram
         uuid project_id FK
         citext name "UK with project_id, case-insensitive"
     }
+    PROJECT_FIELDS {
+        uuid id PK
+        uuid project_id FK
+        text label
+        field_type type "short_text | long_text | number | choice | checkbox | date"
+        bool required
+        int position "UK with project_id, form order"
+        text placeholder "text and number types only"
+        text_array options "choice only, at least 2"
+        timestamptz archived_at "set = hidden from the form"
+        timestamptz created_at
+    }
 ```
 
 ## 2. Intake
@@ -99,6 +123,8 @@ erDiagram
     SUBMISSIONS ||--|| MEDIA_FILES : has
     MEDIA_FILES ||--o{ PROCESSING_JOBS : "converted by"
     PROJECT_MEMBERS ||--o{ PROCESSING_JOBS : "requests reprocess"
+    SUBMISSIONS ||--o{ SUBMISSION_ANSWERS : answers
+    PROJECT_FIELDS ||--o{ SUBMISSION_ANSWERS : "answered in"
 
     PROJECTS {
         uuid id PK
@@ -106,12 +132,14 @@ erDiagram
     PROJECT_MEMBERS {
         uuid id PK
     }
+    PROJECT_FIELDS {
+        uuid id PK
+    }
     SUBMISSIONS {
         uuid id PK
         uuid project_id FK
-        text act_title
-        text description
-        text stage_needs "optional"
+        text act_title "label set per project"
+        text description "label set per project"
         submission_status status "submitted ... not_selected"
         submission_status last_emailed_status "for follow-up flag"
         timestamptz agreed_at
@@ -127,9 +155,17 @@ erDiagram
         uuid participant_id PK, FK
         citext email "managers only (RLS)"
     }
+    SUBMISSION_ANSWERS {
+        uuid submission_id PK, FK
+        uuid field_id PK, FK
+        text value_text "short_text, long_text, choice"
+        numeric value_number "number"
+        bool value_bool "checkbox"
+        date value_date "date"
+    }
     MEDIA_FILES {
         uuid id PK
-        uuid submission_id FK, UK
+        uuid submission_id FK, UK "no row when the project asks for no file"
         media_kind kind "video | audio | image | text"
         text original_key "R2 object key"
         text original_mime "uploaded file type, e.g. video/quicktime"
@@ -280,6 +316,10 @@ erDiagram
 - **Conflict check:** assignment skips a member whose `email` matches any `participant_emails.email` on that submission.
 - **At least one participant email:** enforced by the submit Edge Function (in one transaction) and in the browser.
 - **Finality of participants:** triggers block updates to `participants` and `participant_emails`, and RLS blocks all browser writes. Adding new participant rows to an existing submission is prevented only by the submit function being the sole writer (the database doesn't block a later insert by server code).
+- **Flexible forms:** every project has the same core fields on `submissions` (title, description, participants, optional file), with labels set per project. Anything else is a `project_fields` row, and answers are typed rows in `submission_answers`, so the data stays relational.
+  - Exactly one value column is filled per answer, and a trigger checks it matches the field's type and project, and that a choice answer is one of the options.
+  - Answers are final (no updates). A field's type never changes, options with answers can only be added to, and a field with answers can't be deleted (foreign key), only hidden with `archived_at`.
+  - Required custom fields are checked by the submit Edge Function and in the browser, like the participant email rule.
 - **Combined tags:** `SELECT DISTINCT tag_id FROM submission_tags WHERE submission_id = ? AND discarded_at IS NULL`.
 - **Decision log is append-only.** Every change to `submissions.status` inserts a row, ideally from a trigger.
 - **Follow-up flag:** `status <> last_emailed_status` after results are sent.
