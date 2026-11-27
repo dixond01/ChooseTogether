@@ -3,9 +3,10 @@
 // browser (and managers) ever see it.
 //
 // POST { job_id, action: 'url' }       a fresh signed upload URL (to retry a failed upload)
-// POST { job_id, action: 'complete' }  checks the file arrived whole, then queues conversion
+// POST { job_id, action: 'complete' }  checks the file arrived whole, then starts the converter Lambda
 // Returns { url } / { ok: true }, or { error } with a 4xx/5xx status.
 import { adminClient, checkMethod, json, readJson } from '../_shared/http.ts'
+import { startConversion } from '../_shared/converter.ts'
 import { objectSize, r2Configured, signedPutUrl } from '../_shared/r2.ts'
 
 type Body = { job_id?: unknown; action?: unknown }
@@ -59,13 +60,13 @@ Deno.serve(async (req) => {
     return json(409, { error: 'The file didn’t finish uploading. Try again.', code: 'size' })
   }
 
-  const { error: updateError } = await admin
-    .from('processing_jobs')
-    .update({ status: 'queued' })
-    .eq('id', jobId)
-    .eq('status', 'awaiting_upload')
-  if (updateError) return json(500, { error: updateError.message })
+  // Queues the job, or finishes it right away for files that need no
+  // conversion (text, and images browsers already show).
+  const { data: status, error: completeError } = await admin.rpc('complete_upload', { p_job_id: jobId })
+  if (completeError) return json(500, { error: completeError.message })
 
-  // TODO (11/30): invoke the ffmpeg Lambda asynchronously with the job ID.
+  // If this fails the job stays queued and the sweep starts it later, so the
+  // submitter still sees success.
+  if (status === 'queued') await startConversion(jobId)
   return json(200, { ok: true })
 })

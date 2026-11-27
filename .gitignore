@@ -2,3 +2,5 @@ Context/
 .env
 cloudflareAPIsecret.txt
 node_modules/
+.aws-sam/
+samconfig.toml
