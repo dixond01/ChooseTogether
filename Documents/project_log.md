@@ -8,3 +8,4 @@
 |11/24|3:00|Owner magic-link sign-in, project list/create and settings screens; new visual design (fonts, plum palette, logo)|
 |11/25|2:00|Team invites (invite Edge Function, Team settings), Resend email, custom domain choosetogether.app, admin approval for new projects|
 |11/25|1:00|Flexible submission forms (custom fields, field labels, accepted file types), public submission form UI with validation and duration check, settings regrouped (Form Fields, Tags, Show toggle)|
+|11/25|1:00|Submit and upload Edge Functions (one-transaction save, signed R2 uploads, Turnstile spam check), upload progress and retry on the public form, R2/Turnstile live setup and deploy|
