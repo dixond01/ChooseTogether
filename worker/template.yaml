@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ChooseTogether file converter (ffmpeg on Lambda). See worker/README.md.
+
+Parameters:
+  SupabaseUrl:
+    Type: String
+  SupabaseServiceRoleKey:
+    Type: String
+    NoEcho: true
+  R2AccountId:
+    Type: String
+  R2AccessKeyId:
+    Type: String
+    NoEcho: true
+  R2SecretAccessKey:
+    Type: String
+    NoEcho: true
+  R2Bucket:
+    Type: String
+
+Resources:
+  ConverterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: choosetogether-converter
+      PackageType: Image
+      Architectures: [x86_64]
+      # More memory also means more CPU, which is what ffmpeg needs.
+      # 3008 MB is the most a new AWS account allows without a quota increase.
+      MemorySize: 3008
+      Timeout: 900
+      # /tmp holds the original (up to 5 GB) and the converted file.
+      EphemeralStorage:
+        Size: 10240
+      Environment:
+        Variables:
+          SUPABASE_URL: !Ref SupabaseUrl
+          SUPABASE_SERVICE_ROLE_KEY: !Ref SupabaseServiceRoleKey
+          R2_ACCOUNT_ID: !Ref R2AccountId
+          R2_ACCESS_KEY_ID: !Ref R2AccessKeyId
+          R2_SECRET_ACCESS_KEY: !Ref R2SecretAccessKey
+          R2_BUCKET: !Ref R2Bucket
+      # A failed conversion is recorded on the job, and the pg_cron sweep
+      # retries stuck ones, so AWS shouldn't retry on its own.
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+        MaximumEventAgeInSeconds: 3600
+    Metadata:
+      DockerContext: .
+      Dockerfile: Dockerfile
+      DockerTag: latest
+
+  ConverterLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/choosetogether-converter
+      RetentionInDays: 30
+
+  # The Supabase Edge Function (and the sweep) sign in as this user. It can
+  # only invoke the converter, nothing else in the account.
+  InvokerUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: choosetogether-invoker
+      Policies:
+        - PolicyName: invoke-converter
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt ConverterFunction.Arn
+
+Outputs:
+  FunctionName:
+    Value: !Ref ConverterFunction
+  InvokerUserName:
+    Value: !Ref InvokerUser

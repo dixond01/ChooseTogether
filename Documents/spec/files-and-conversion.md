@@ -6,7 +6,7 @@
 - The flow:
   1. The `submit` Edge Function saves the submission, its `media_files` row (`processing_status = pending`) and a job in `awaiting_upload`, then returns the job ID and a signed upload URL (valid 1 hour).
   2. The browser uploads with a progress bar. If the upload fails, the submission is already saved: **Try Again** asks the `upload` Edge Function for a fresh URL (`action: 'url'`) using the job ID, for up to 2 days.
-  3. The browser calls `upload` with `action: 'complete'`. It checks the object exists in R2 with the recorded size, then sets the job to `queued` (and will invoke the Lambda).
+  3. The browser calls `upload` with `action: 'complete'`. It checks the object exists in R2 with the recorded size, then sets the job to `queued` and invokes the Lambda. Files that need no conversion (text, and images other than HEIC) are marked ready instead.
 - Object keys: `originals/{project_id}/{media_file_id}.{ext}`.
 - The R2 bucket needs a CORS rule allowing `PUT` with the `content-type` header from the site's origins.
 
