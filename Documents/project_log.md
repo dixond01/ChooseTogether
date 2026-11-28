@@ -10,3 +10,4 @@
 |11/25|1:00|Flexible submission forms (custom fields, field labels, accepted file types), public submission form UI with validation and duration check, settings regrouped (Form Fields, Tags, Show toggle)|
 |11/25|1:00|Submit and upload Edge Functions (one-transaction save, signed R2 uploads, Turnstile spam check), upload progress and retry on the public form, R2/Turnstile live setup and deploy|
 |11/27|1:00|ffmpeg conversion worker on AWS Lambda (Docker image via SAM): job claiming with leases, video/audio/HEIC conversion, safe mode for Reprocess, upload function invokes it; tests in the Lambda image and pgTAP; deployed and verified with a live upload|
+|11/27|0:40|pg_cron sweep for stuck conversion jobs: sweep-jobs Edge Function called every 5 minutes via pg_net with a Vault secret, requeues expired leases and fails after 3 attempts, re-invokes lost queued jobs; pgTAP tests|
