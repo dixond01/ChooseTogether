@@ -426,6 +426,10 @@ verify_jwt = false
 [functions.upload]
 verify_jwt = false
 
+# Called by pg_cron with its own shared secret (JOB_SWEEP_SECRET), not a JWT.
+[functions.sweep-jobs]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
